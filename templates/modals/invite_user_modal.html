@@ -4,88 +4,80 @@
     <div class="modal-content">
 
         <div class="row">
-           <form id="invite_user_form" class="col s12" method="post">
-           <div class="row">
-            <div class="input-field col s6">
-              <input name="username" placeholder="Placeholder" id="first_name" type="text" class="validate">
-              <label for="first_name">Username</label>
-            </div>
-            <div class="input-field col s6">
-              <input id="last_name" name="password" type="text" class="validate">
-              <label for="last_name">Password</label>
-            </div>
-          </div>
-           <div class="row">
-            <div class="input-field col s12">
-              <input name="realname" id="realname" type="text">
-              <label for="realname">Real Name</label>
-            </div>
-          </div>
-           <div class="row">
-            <div class="input-field col s12">
-                <input type="hidden" name="room_id" value="{{ room.id }}">
-              <input id="email" name="email" type="email" class="validate">
-              <label for="email">Email</label>
-            </div>
-          </div>
-           </form>
+          <div class="input-field col s8">
+          <i class="material-icons prefix">account_circle</i>
+          <input id="email_address" type="email" class="validate">
+          <label for="icon_prefix">Email Address</label>
+        </div>
+        <div class="col s4">
+            <button class="btn blue" onclick="create_token()"><small id="tok_btn_txt">Create Token</small></button>
+        </div>
+        </div>
+        <div class="row hide" id="token_details">
+            Your Token: <strong id="the-token"></strong><br>
+            Link To Join: <a href="#" id="token-link"></a><br>
+            <textarea rows="5" cols="80" placeholder="Custom Message" id="custom_msg"></textarea>
         </div>
         <div class="row">
-            <button class="btn blue" onclick="inviteuser()">Invite</button>
+            <button class="btn blue disabled btnX" onclick="inviteuser()">Email Invitation</button>
+            <button class="btn green disabled btnX" onclick="inviteuser(false)">Save, but dont email</button>
+            <button class="btn red disabled btnX">Cancel</button>
         </div>
 
 
     </div>
   </div>
 
-  <div id="user_invited" class="modal">
-
-    <div class="modal-content">
-
-        <div class="row">
-           <form id="invite_user_form" class="col s12" method="post">
-           <div class="row">
-            <div class="input-field col s6">
-              <input name="username" placeholder="Placeholder" id="first_name" type="text" class="validate">
-              <label for="first_name">Username</label>
-            </div>
-            <div class="input-field col s6">
-              <input id="last_name" name="password" type="text" class="validate">
-              <label for="last_name">Password</label>
-            </div>
-          </div>
-           <div class="row">
-            <div class="input-field col s12">
-              <input name="realname" id="realname" type="text">
-              <label for="realname">Real Name</label>
-            </div>
-          </div>
-           <div class="row">
-            <div class="input-field col s12">
-                <input type="hidden" name="room_id" value="{{ room.id }}">
-              <input id="email" name="email" type="email" class="validate">
-              <label for="email">Email</label>
-            </div>
-          </div>
-           </form>
-        </div>
-        <div class="row">
-            <button class="btn blue" onclick="inviteuser()">Invite</button>
-        </div>
-
-
-    </div>
-  </div>
+{#  <div id="user_invited" class="modal">#}
+{#    <div class="modal-content">#}
+{#        <div class="row">#}
+{#            Invitation Saved!#}
+{#        </div>#}
+{#    </div>#}
+{#  </div>#}
 <script>
-    function user_invited(data) {
-        console.log("USer Add Result:",data)
-        $("#invite_user").modal('close')
-
+    function open_user_dropdown(ele,user_email){
+        console.log("OPEN USER MENU??",user_email,"{{ room.room_name }}")
+        var result = $(ele)
+        console.log("OK?",ele,result)
     }
-    function inviteuser(){
-        var data = $( "#invite_user_form" ).serialize()
-        data = data + "&as_json=1"
-        console.log("SEND:",data)
-        $.post("/invite/{{ room.room_name }}" ,data).done(user_invited);
+function inviteuser(send_email){
+    var url = "{{ request.host_url }}api/invite"
+    data = {
+        email:$("#email_address").val(),
+        send_email:send_email,
+        room_id:"{{ room.id }}"
     }
+    $.post(url,data).done(function(data){
+        console.log("INVITE:",data)
+    })
+}
+function create_token(){
+    $('#tok_btn_txt').parent().addClass('disabled')
+    if($("#token_details").hasClass('hide')) {
+        var email = $("#email_address").val()
+        $("#email_address").attr("disabled", "disabled")
+        var uri = "/api/token/{{ room.room_name }}" + email
+        console.log("URI:uri", uri)
+        $.get(uri, function (data) {
+            console.log("DATA:", data)
+            $("#the-token").text(data)
+            var url = "{{ request.host_url }}join/{{ room.id }}/" + data
+            $("#token-link").text(url)
+            $("#token-link").attr('href', url)
+            default_msg = "Please join the interactive coding session at the url below\n" + url
+            $("#custom_msg").attr('placeholder', default_msg)
+            $("#token_details").removeClass('hide')
+            $(".btnX").removeClass("disabled")
+            $('#tok_btn_txt').text("Edit Email")
+            $('#tok_btn_txt').parent().removeClass('disabled')
+        })
+    }else{
+        $("#token_details").addClass('hide')
+        $("#email_address").removeAttr("disabled");
+        $('#tok_btn_txt').text("Create Token")
+        $('#tok_btn_txt').parent().removeClass('disabled')
+        $(".btnX").addClass("disabled")
+    }
+}
 </script>

@@ -20,8 +20,11 @@ socket.on('user_run',function(data){
 socket.on("focus_update",function(data){
     console.log("FOCUS:",data)
     var msg='';
-    var ele = $('#user-'+data.user_id.toString());
-    console.log("UPDT:",'#user-'+data.user_id.toString(),ele)
+
+    // var ele = $('#user-'+data.user_id.toString());
+    var ele = $('.chip:contains("'+data.room_details.username+' assignment") > i');
+
+    console.log("UPDT:",ele)
     if(data.action=="LOST"){
         ele.removeClass('green')
         ele.addClass('red')
@@ -44,25 +47,53 @@ socket.on('user_joined',function(data){
 });
 socket.on('sync_result',function(data){
     console.log("SYNCH:",data)
+
     var users = data['all_users']
-    var span = $('<span>')
-    for(var i=0;i<users.length;i++){
-        var color="gray"
-        var icon="assignment_ind"
-        if(users[i].online){
-            color="green"
-        }else{
-            color="gray"
+    if (users){
+        var span = $('<span>')
+        for(var i=0;i<users.length;i++) {
+            var color = "gray"
+            var icon = "assignment_ind"
+            if (users[i].online) {
+                color = "green"
+            } else {
+                color = "gray"
+            }
+            if (users[i].is_AFK) {
+                color = 'red';
+                icon = 'assignment_late'
+            }
+            console.log("???")
+            var id = "user-" + users[i]['id'];
+            var drop_id = 'dropdown-user-' + users[i]['id']
+            if ($('#' + drop_id).length) {
+                // console.log("exists??")
+                $('#' + drop_id + " > a").data("target", users[i])
+            } else {
+
+                var ele = $('<ul class="dropdown-content" id="' + drop_id + '">')
+                ele.html($("#user-info-dropdown-template").html())
+                console.log("ELE.children", ele.find('a'))
+                ele.find('a').data('target', users[i])
+
+                $("body").append(ele)
+            }
+            span.append('<div  class="chip user-dropdown" data-activates=\'' + drop_id + '\'>' + users[i].username + ' <i id="' + id + '" class="material-icons ' + color + '">' + icon + '</i></div>')
         }
-        if(users[i].is_AFK){
-            color = 'red';
-            icon='assignment_late'
-        }
-        console.log("???")
-        var id = "user-"+users[i]['id'];
-        span.append('<div class="chip">'+users[i].username+' <i id="'+id+'" class="material-icons '+color+'">'+icon+'</i></div>')
+
     }
     $("#users_div").html(span)
+    $(".user-dropdown").dropdown({
+          inDuration: 300,
+          outDuration: 225,
+          constrainWidth: false, // Does not change width of dropdown to that of the activator
+          hover: true, // Activate on hover
+          gutter: 0, // Spacing from edge
+          belowOrigin: true, // Displays dropdown below the button
+          alignment: 'left', // Displays dropdown with edge aligned to the left of button
+          stopPropagation: false // Stops event propagation
+        });
+
     // editor.setValue(data.program_text)
 });
 socket.on('user_left',function(data){

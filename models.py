@@ -1,5 +1,11 @@
+import base64
 import hashlib
+import json
+import random
 
+import re
+
+from flask import request, session
 from flask_login import LoginManager, login_user
 from flask_sqlalchemy import SQLAlchemy
 
@@ -18,6 +24,10 @@ class User(db.Model):
     is_admin = db.Column(db.Boolean, default=False)
     is_AFK = db.Column(db.Boolean, default=False)
     is_active = db.Column(db.Boolean, default=True)
+    @classmethod
+    def create_guest(cls,email):
+        username=email.split("@",1)[0]
+        return User(id=random.randint(1000000,100000000),email=email,username=username,realname=re.sub("([a-z])([A-Z])","\\1 \\2",username.title()))
     @classmethod
     def get_or_create(cls,username,password,realname,email,**kwargs):
         user = User.query.filter_by(email=email).first()
@@ -42,7 +52,7 @@ class User(db.Model):
         return True
 
 
-
+    @property
     def is_anonymous(self):
         return False
 
@@ -70,21 +80,30 @@ class User(db.Model):
     @staticmethod
     @login_manager.user_loader
     def user_loader(token):
-        return User.query.filter_by(email=token).first()
+        try:
+            user = User.query.filter_by(email=token).first()
+        except:
+            pass
+        if not user and session.get("X-token-coderpad",None):
+            invite_token = base64.b64decode(session['X-token-coderpad'])
+            invitation = Invitations.query.filter_by(invite_code=invite_token).first()
+            if invitation.room.active:
+                return User.create_guest(invitation.email_address)
+        return user
+
 
 
 
 class Invitations(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'),
-                        nullable=False)
-    user = db.relationship('User',
-                           backref=db.backref('rooms', lazy=True))
+    invite_code = db.Column(db.String(120))
+    email_address = db.Column(db.String(120))
     room_id = db.Column(db.Integer, db.ForeignKey('room.id'),
                         nullable=False)
     room = db.relationship('Room',
                            backref=db.backref('invited_users', lazy=True))
-
+    def to_dict(self):
+        return {'id':self.id,'email_address':self.email_address,'invite_code':self.invite_code,'room':self.room.to_dict()}
 
 class Room(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -98,16 +117,18 @@ class Room(db.Model):
     owner = db.relationship('User',
                             backref=db.backref('owned_rooms', lazy=True))
     def room_members(self):
-        return [self.owner,] + [i.user for i in self.invited_users]
+        return [self.owner,] + [User.create_guest(i.email_address) for i in self.invited_users]
     def is_invited(self,user):
         if not self.require_registered:
             return True
         if not self.invite_only:
             return not user.is_anonymous()
 
-        return user.id in [u.id for u in self.room_members()]
+        return user.email in [u.email for u in self.room_members()]
     def to_dict(self):
-        return {'owner_id':self.owner_id,
+        return {
+            'id':self.id,
+            'owner_id':self.owner_id,
             'room_name':self.room_name,
             'require_registered':self.require_registered,
             'invite_only':self.invite_only,

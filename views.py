@@ -1,49 +1,15 @@
+import base64
 import os
-from flask import Blueprint, flash, redirect, render_template, request, json
-from flask_login import login_required, current_user, logout_user
+from flask import Blueprint, flash, redirect, render_template, request, json, session
+from flask_login import login_required, current_user, logout_user, login_user
 
 from languages import languages_ace
 from models import Room, User, db, Invitations
+from socket_server import active_users
 
 flask_views = Blueprint("main_routes", "main_routes")
 
-@flask_views.route("/create", methods=["GET", "POST"])
-@login_required
-def create_room():
-    if not current_user.is_admin:
-        flash("Please Login on an account that allows creating channels")
-        return redirect('/login?next=/create')
-    if request.form.get('room_name'):
-        d = request.form.to_dict()
-        d['active']=True
-        d['owner_id'] = current_user.id
-        d['invite_only'] = d['invite_only'] == "on"
-        d['require_registered'] = d['require_registered'] == "on"
-        Room.from_dict(d,commit=True)
-        return redirect("/session/"+d['room_name'])
-    ctx = dict(
-        languages = sorted(languages_ace.items())
-    )
-    # themes = sorted(themes_ace.items())
-    return render_template('create_session.html',**ctx)
-@flask_views.route("/invite/<room_name>", methods=["GET", "POST"])
-def invite(room_name):
-    room = Room.query.filter_by(room_name=room_name).first()
-    if not room:
-        return "ERROR ROOM NOT FOUND!"
-    if not current_user.is_admin and room.require_registered:
-        return "Insufficient Authorization"
-    if request.form:
-        data = request.form.to_dict()
-        user = User.get_or_create(**data)
-        db.session.add(Invitations(user=user,room=room))
-        db.session.commit()
-        if data.get('as_json',False):
-            return json.dumps({'user':user.to_dict()})
 
-    # room = json.load(open(os.path.join(os.path.dirname(__file__), 'metadata', '%s.json' % room_name), "rb"))
-    url = request.host_url.split("//",1)[0]+"//"+request.host+"/session/"+room.room_name
-    return render_template('invite_candidate.html',room=room,url=url)
 
 
 @flask_views.route("/session/<room_name>")
@@ -51,18 +17,16 @@ def view_session(room_name,username=''):
     room = Room.query.filter_by(room_name=room_name).first()
     if not room:
         return "Unable to find that room"
-
+    if not room.active and current_user.id != room.owner_id:
+        return "Room no longer available"
     if room.require_registered :
-        if current_user.is_anonymous():
+        if current_user.is_anonymous:
             return redirect("/login?next=/session/%s"%room_name)
         if not current_user.is_admin:
-            if not current_user.is_active:
-                return "Unauthorized"
             if room.invite_only:
-                if current_user.id not in [invite.user.id for invite in room.invited_users] + [room.owner_id,]:
+                if current_user.email not in [invite.email_address for invite in room.invited_users] + [room.owner.email,]:
                     return "not authorized to enter room"
-                if not room.active and current_user.id != room.owner_id:
-                    return "Room no longer available"
+
         elif request.form:
             pass # if request.form.get('')
     try:
@@ -73,6 +37,8 @@ def view_session(room_name,username=''):
         room = room.to_dict(),
         username=username
     )
+    if username in [x['username'] for x in active_users.get(room_name,[])]:
+        return "You are already in this room... please check your other tabs and try again"
     return render_template('code_editor.html',**ctx)
 
 @flask_views.route("/logout")
@@ -89,3 +55,15 @@ def do_login():
         if User.login(user,pw):
             return redirect(request.args.get("next","/"))
     return render_template("login.html")
+
+@flask_views.route("/join/<room_id>/<token>")
+def join_room(room_id,token):
+    invitation = Invitations.query.filter_by(invite_code=token,room_id=room_id).first()
+    if not invitation:
+        return "sorry buddy"
+    session["X-token-coderpad"] = base64.b64encode(token)
+    print "OK CREATED TOKEN:",request,session["X-token-coderpad"]
+    login_user(User.user_loader("ASDASD"),force=True)
+    return redirect('session/'+invitation.room.room_name)
+
+

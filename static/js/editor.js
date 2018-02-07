@@ -10,6 +10,7 @@ function initializeEditor(div_id,theme_name,language_mode) {
 
     return editor
 }
+
 var editor;
 $(function(){
     editor = initializeEditor('editor');

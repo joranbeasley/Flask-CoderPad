@@ -23,7 +23,7 @@ def on_join(data):
     if not room:
         disconnect()
     if room.require_registered:
-        if current_user.is_anonymous():
+        if current_user.is_anonymous:
             disconnect()
         username = current_user.username
         User.query.filter_by(id=current_user.id).update(dict(sid=request.sid))
@@ -37,7 +37,7 @@ def on_join(data):
     # emit('sync',{'program_text':get_latest_prog(room)},room=room,broadcast=False)
     print "EMIT:psynch",{'program_text':get_latest_prog(room.room_name)}
     join_room(room.room_name)
-    if current_user.is_anonymous():
+    if current_user.is_anonymous:
         active_users[room.room_name].append({'username':username})
     else:
         active_users[room.room_name].append(current_user.to_dict())
@@ -54,7 +54,6 @@ def on_speech(data):
 
 @socketio.on('leave')
 def on_leave(data):
-    print "LEAVE:",data
     if not data:return
     username = data['username']
     room_name = data['room']
@@ -64,7 +63,7 @@ def on_leave(data):
         disconnect()
         return
     if room.require_registered:
-        if current_user.is_anonymous():
+        if current_user.is_anonymous:
             print "NO ANON!!! ADIOS!!"
             disconnect()
             return
@@ -91,11 +90,12 @@ def on_lost_focus(data):
     if not room or not room.owner.sid:
         return
     user = User.query.filter_by(username=data['room_details']['username'], is_active='TRUE').first()
-
-    data['user_id'] = user.id
-    user.is_AFK = True
-    db.session.commit()
+    if user:
+        data['user_id'] = user.id
+        user.is_AFK = True
+        db.session.commit()
     data['action'] = "LOST"
+    print 'focus_update', data, room.owner.sid
     emit('focus_update', data, room=room.owner.sid)
 @socketio.on("focus_gained")
 def on_focus_gained(data):
@@ -104,9 +104,10 @@ def on_focus_gained(data):
     data['action']="GAINED"
     if room and room.owner.sid:
         user = User.query.filter_by(username=data['room_details']['username'],is_active='TRUE').first()
-        data['user_id'] = user.id
-        user.is_AFK = False
-        db.session.commit()
+        if user:
+            data['user_id'] = user.id
+            user.is_AFK = False
+            db.session.commit()
         emit('focus_update', data, room=room.owner.sid)
 
 @socketio.on('message')

@@ -8,6 +8,7 @@
 
     <script src="/static/js/editor.js"></script>
     <script src="/static/js/consoleJS.js"></script>
+    <script src="/static/js/matDialogs.js"></script>
     <script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.6/socket.io.min.js"></script>
     <script src="/static/js/communication.js"></script>
 
@@ -19,7 +20,8 @@
     </div>
 
     <div class="col s7" id="users_div"></div>
-    <div class="col s1"><a class="floating-btn modal-trigger" href="#invite_user"><i class="material-icons">group_add</i></a></div>
+    <div class="col s1">
+        {% if current_user.id == room.owner_id %}<a class="floating-btn modal-trigger" href="#invite_user"><i class="material-icons">group_add</i></a>{% endif %}</div>
     <div class="col s2"><div class="right white-text">{{ room_name }}- {{ username }}</div>
 
     </div>
@@ -35,6 +37,42 @@
 {% if current_user.is_admin and current_user.id == room.owner_id %}
     {% include "modals/welcome_modal.html" %}
     {% include "modals/invite_user_modal.html" %}
+    <ul id='user-info-dropdown-template' class='dropdown-content'>
+        <li><a href="#!" onclick="show_invite_link(this)">View Invite Link</a></li>
+        <li><a href="#!" onclick="show_uninvite_prompt(this)">Uninvite User</a></li>
+    </ul>
+    <script>
+    function show_uninvite_prompt(ele){
+        if (confirm("Really Remove: "+$(ele).data('target')['email']+"?")){
+
+        }
+    }
+    function copyToClipboard(element) {
+        var $temp = $("<input>");
+        $("body").append($temp);
+        $temp.val($(element).text()).select();
+        document.execCommand("copy");
+        $temp.remove();
+    }
+    function clip_it(url){
+        copyToClipboard(document.getElementById('clip_url'))
+        console.log("OK COPIED",url)
+        var toastElement = $('.toast').first()[0];
+          var toastInstance = toastElement.M_Toast;
+          toastInstance.remove();
+    }
+    function show_invite_link(ele){
+        console.log("ELE",ele)
+        console.log($(ele).data('target')['email'])
+        $.get("/api/token/{{ room.room_name }}"+$(ele).data('target')['email'],function(token){
+            var url = '{{ request.host_url }}join/{{ room.id }}/'+token
+            var $toastContent = $('<span id="clip_url">'+url+'</span>').add($('<button onclick="clip_it(\''+url+'\')" class="btn-flat toast-action">Copy</button>'));
+            Materialize.toast($toastContent, 10000,'invite-link');
+        })
+
+
+    }
+    </script>
 {% endif %}
 
 
