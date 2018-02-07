@@ -51,3 +51,12 @@ def invite_guest():
     db.session.add(new_invite)
     db.session.commit()
     return json.dumps(new_invite.to_dict())
+
+@api.route("/room_activation/<room_id>/<enabled>")
+@login_required
+def room_activation(room_id,enabled):
+    if not current_user.is_admin:
+        return ""
+    Room.query.filter_by(id=room_id).update(dict(active=bool(int(enabled))))
+    db.session.commit()
+    return enabled

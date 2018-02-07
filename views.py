@@ -1,5 +1,7 @@
 import base64
 import os
+import traceback
+
 from flask import Blueprint, flash, redirect, render_template, request, json, session
 from flask_login import login_required, current_user, logout_user, login_user
 
@@ -17,8 +19,9 @@ def view_session(room_name,username=''):
     room = Room.query.filter_by(room_name=room_name).first()
     if not room:
         return "Unable to find that room"
-    if not room.active and current_user.id != room.owner_id:
-        return "Room no longer available"
+    if not room.active:
+        if current_user.is_anonymous or current_user.id != room.owner_id:
+            return "Room no longer available"
     if room.require_registered :
         if current_user.is_anonymous:
             return redirect("/login?next=/session/%s"%room_name)
@@ -61,9 +64,15 @@ def join_room(room_id,token):
     invitation = Invitations.query.filter_by(invite_code=token,room_id=room_id).first()
     if not invitation:
         return "sorry buddy"
+    if not invitation.room.active:
+        return "Room No Longer Active"
     session["X-token-coderpad"] = base64.b64encode(token)
     print "OK CREATED TOKEN:",request,session["X-token-coderpad"]
-    login_user(User.user_loader("ASDASD"),force=True)
+    try:
+        login_user(User.user_loader("ASDASD"),force=True)
+    except:
+        traceback.print_exc()
+        return "Login Failure"
     return redirect('session/'+invitation.room.room_name)
 
 

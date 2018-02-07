@@ -6,14 +6,32 @@
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Rooms</title>
+    {% include "util/coder_pad_head.html" %}
 </head>
-<body>
-<table>
+<body class="container">
+
+<table border="1">
     {% for room in rooms %}
     <tr>
-        <td><a href="/session/{{ room.room_name }}">{{ room.room_name }}</a></td><td>{{ room.active }}</td><td>{{ room.owner.realname }}</td><td>{{ active_users[room.room_name]|length }}</td>
+        <td><a href="/session/{{ room.room_name }}">{{ room.room_name }}</a></td><td>
+    <div class="switch">
+    <label>
+      Off
+      <input onchange="notify(this,{{ room.id }})" type="checkbox" {% if room.active %}checked="checked"{% endif %}>
+      <span class="lever"></span>
+      Active
+    </label>
+  </div>
+    </td><td>{{ room.owner.realname }}</td><td>{{ active_users[room.room_name]|length }}/{{ room.room_members()|length }}</td>
     </tr>
     {% endfor %}
 </table>
 </body>
+<script>
+    function notify(ele,room_id){
+        var checked = $(ele).prop('checked')
+        $.get("/api/room_activation/"+room_id+"/"+(+checked))
+        console.log(ele,room_id,checked)
+    }
+</script>
 </html>

@@ -49,6 +49,12 @@ def invite(room_name):
     url = request.host_url.split("//", 1)[0] + "//" + request.host + "/session/" + room.room_name
     return render_template('invite_candidate.html', room=room, url=url)
 
+# @admin_views.route("/room_activation/<room_id>/<enabled>")
+# @login_required
+# def list_rooms(room_id,enabled):
+#     Room.query.filter_by(id=room_id).update(active=bool(int(enabled)))
+#     db.session.commit()
+
 @admin_views.route("/list_rooms")
 @login_required
 def list_rooms():
