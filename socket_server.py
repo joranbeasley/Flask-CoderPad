@@ -4,7 +4,7 @@ from flask import current_app, Flask, request
 from flask_login import current_user
 from flask_socketio import join_room, leave_room, SocketIO, disconnect, emit
 
-from models import User, Room, db
+from models import User, Room, db, Invitations
 from room_util import get_latest_prog, update_latest_prog
 
 
@@ -20,13 +20,20 @@ def on_join(data):
     username = data['username']
     room_name = data['room']
     room = Room.query.filter_by(room_name=room_name).first()
-    if not room:
+    if not room or not room.active:
         disconnect()
+
     if room.require_registered:
         if current_user.is_anonymous:
             disconnect()
         username = current_user.username
-        User.query.filter_by(id=current_user.id).update(dict(sid=request.sid))
+        try:
+            user = User.query.filter_by(id=current_user.id).first()
+        except:
+            user = None
+        if not user and current_user.is_admin is None:
+            user = Invitations.get_my_invitation()
+        user.sid=request.sid
         db.session.commit()
         if room.invite_only and not room.is_invited(current_user):
             print "User %s is not invited to room %s"%(current_user,room)
@@ -76,7 +83,13 @@ def on_leave(data):
             return
         else:
             username = current_user.username
-            User.query.filter_by(id=current_user.id).update(dict(sid=None))
+            try:
+                user = User.query.filter_by(id=current_user.id).first()
+            except:
+                user = None
+            if not user:
+                user = Invitations.get_my_invitation()
+            user.sid=None
             db.session.commit()
             ex_user = active_users[room.room_name].pop(idx)
             print "POPPED:",ex_user,"@",idx

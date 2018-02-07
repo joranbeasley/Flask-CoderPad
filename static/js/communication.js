@@ -17,13 +17,28 @@ socket.on('user_run',function(data){
     console.log("ON RUN:",data)
     runit(data['username'])
 })
+function find_user_element(username){
+    var ele = $('.chip:contains("'+username+' assignment") > i');
+    if(ele.length > 1) {
+        for (var i = 0; i < ele.length; i++) {
+            var elem = $(ele[i]);
+            var txt = elem.parent().text();
+            var needle = username+" assignment_";
+            if (txt.match("^"+needle)){
+                ele = elem;
+                break;
+            }
+
+        }
+    }
+    return ele
+}
 socket.on("focus_update",function(data){
     console.log("FOCUS:",data)
     var msg='';
 
     // var ele = $('#user-'+data.user_id.toString());
-    var ele = $('.chip:contains("'+data.room_details.username+' assignment") > i');
-
+    var ele = find_user_element(data.room_details.username)
     console.log("UPDT:",ele)
     if(data.action=="LOST"){
         ele.removeClass('green')

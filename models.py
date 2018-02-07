@@ -98,10 +98,17 @@ class Invitations(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     invite_code = db.Column(db.String(120))
     email_address = db.Column(db.String(120))
+    sid = db.Column(db.String(120),nullable=True,default=None)
     room_id = db.Column(db.Integer, db.ForeignKey('room.id'),
                         nullable=False)
     room = db.relationship('Room',
                            backref=db.backref('invited_users', lazy=True))
+    @staticmethod
+    def get_my_invitation():
+        tokb64 = session.get("X-token-coderpad", None)
+        if not tokb64:
+            return None
+        return Invitations.query.filter_by(invite_code=base64.b64decode(tokb64)).first()
     def to_dict(self):
         return {'id':self.id,'email_address':self.email_address,'invite_code':self.invite_code,'room':self.room.to_dict()}
 
