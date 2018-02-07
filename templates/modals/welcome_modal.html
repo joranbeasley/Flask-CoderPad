@@ -1,0 +1,23 @@
+<!-- Modal Structure -->
+  <div id="welcome_modal" class="modal">
+    <div class="modal-content">
+      <h4>Welcome To Your New Room</h4>
+        <p>Room Name: <strong>{{ room.room_name }}</strong> :: Room Language: <strong>{{ room.room_language }}</strong></p>
+        <p>
+            As the room owner you can invite other users to your room.
+            you will also be able to see all the users currently in
+            the room and their current attention state.
+        </p>
+        <p>
+            the following indicators indicate status
+        <div class="chip">Pending Invite<i class="material-icons gray">assignment_ind</i></div>
+        <div class="chip">Attentive User<i class="material-icons green">assignment_ind</i></div>
+        <div class="chip">inattentive User<i class="material-icons indigo lighten-1">assignment_late</i></div>
+        <div class="chip">Disconnected User<i class="material-icons red">broken_image</i></div>
+
+        </p>
+    </div>
+    <div class="modal-footer">
+      <a href="#!" class="modal-action modal-close waves-effect waves-green btn-flat">Great</a>
+    </div>
+  </div>

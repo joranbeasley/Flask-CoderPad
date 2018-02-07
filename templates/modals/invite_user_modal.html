@@ -1,0 +1,91 @@
+<!-- Modal Structure -->
+  <div id="invite_user" class="modal">
+
+    <div class="modal-content">
+
+        <div class="row">
+           <form id="invite_user_form" class="col s12" method="post">
+           <div class="row">
+            <div class="input-field col s6">
+              <input name="username" placeholder="Placeholder" id="first_name" type="text" class="validate">
+              <label for="first_name">Username</label>
+            </div>
+            <div class="input-field col s6">
+              <input id="last_name" name="password" type="text" class="validate">
+              <label for="last_name">Password</label>
+            </div>
+          </div>
+           <div class="row">
+            <div class="input-field col s12">
+              <input name="realname" id="realname" type="text">
+              <label for="realname">Real Name</label>
+            </div>
+          </div>
+           <div class="row">
+            <div class="input-field col s12">
+                <input type="hidden" name="room_id" value="{{ room.id }}">
+              <input id="email" name="email" type="email" class="validate">
+              <label for="email">Email</label>
+            </div>
+          </div>
+           </form>
+        </div>
+        <div class="row">
+            <button class="btn blue" onclick="inviteuser()">Invite</button>
+        </div>
+
+
+    </div>
+  </div>
+
+  <div id="user_invited" class="modal">
+
+    <div class="modal-content">
+
+        <div class="row">
+           <form id="invite_user_form" class="col s12" method="post">
+           <div class="row">
+            <div class="input-field col s6">
+              <input name="username" placeholder="Placeholder" id="first_name" type="text" class="validate">
+              <label for="first_name">Username</label>
+            </div>
+            <div class="input-field col s6">
+              <input id="last_name" name="password" type="text" class="validate">
+              <label for="last_name">Password</label>
+            </div>
+          </div>
+           <div class="row">
+            <div class="input-field col s12">
+              <input name="realname" id="realname" type="text">
+              <label for="realname">Real Name</label>
+            </div>
+          </div>
+           <div class="row">
+            <div class="input-field col s12">
+                <input type="hidden" name="room_id" value="{{ room.id }}">
+              <input id="email" name="email" type="email" class="validate">
+              <label for="email">Email</label>
+            </div>
+          </div>
+           </form>
+        </div>
+        <div class="row">
+            <button class="btn blue" onclick="inviteuser()">Invite</button>
+        </div>
+
+
+    </div>
+  </div>
+<script>
+    function user_invited(data) {
+        console.log("USer Add Result:",data)
+        $("#invite_user").modal('close')
+
+    }
+    function inviteuser(){
+        var data = $( "#invite_user_form" ).serialize()
+        data = data + "&as_json=1"
+        console.log("SEND:",data)
+        $.post("/invite/{{ room.room_name }}" ,data).done(user_invited);
+    }
+</script>

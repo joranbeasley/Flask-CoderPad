@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Create Session</title>
+        <script  src="http://code.jquery.com/jquery-2.2.4.min.js"></script>
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<!-- Compiled and minified CSS -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/css/materialize.min.css">
+
+<!-- Compiled and minified JavaScript -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/0.100.2/js/materialize.min.js"></script>
+<script>
+    var language_options={ {% for key,val in languages %}"{{ key }}": "{{ val }}",{% endfor %} };
+    $(function() {
+        $('input.autocomplete').autocomplete({
+            data: language_options,
+            onAutocomplete: function(val) {
+                    console.log(val)
+                    $("#room_language").val(language_options[val])
+            },
+        });
+    });
+</script>
+</head>
+<body>
+<div class="row">
+    URL: <a href="{{ url }}"> {{ url }} </a>
+    <form class="col s12" method="post">
+       <div class="row">
+        <div class="input-field col s6">
+          <input name="username" placeholder="Placeholder" id="first_name" type="text" class="validate">
+          <label for="first_name">Username</label>
+        </div>
+        <div class="input-field col s6">
+          <input id="last_name" name="password" type="text" class="validate">
+          <label for="last_name">Password</label>
+        </div>
+      </div>
+        <div class="row">
+        <div class="input-field col s12">
+          <input name="realname" id="realname" type="text">
+          <label for="realname">Real Name</label>
+        </div>
+      </div>
+      <div class="row">
+        <div class="input-field col s12">
+          <input id="email" name="email" type="email" class="validate">
+          <label for="email">Email</label>
+        </div>
+      </div>
+
+    </form>
+  </div>
+<button class="btn blue">Invite</button>
+</body>
+</html>

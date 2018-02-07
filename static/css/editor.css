@@ -1,0 +1,19 @@
+#editor_panel{
+    position: absolute;
+    top:40px;
+    bottom:0;left:0;right: 0;
+}
+#editor {
+    position: absolute;
+    top: 0px;
+    bottom: 0;
+    left:0;
+    right:50%;
+}
+#editor-interactive {
+    position: absolute;
+    top: 0px;
+    bottom: 0;
+    right:0;
+    left:50%;
+}
