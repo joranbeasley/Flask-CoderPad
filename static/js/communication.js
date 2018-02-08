@@ -58,12 +58,15 @@ socket.on("focus_update",function(data){
 
 })
 socket.on('user_joined',function(data){
+    socket.emit('sync_request',{'room_details':room_details})
     jqconsole.Append('<div class="teal-text lighten-2"> USER '+data.username+' has joined the room!</div>')
 });
 socket.on('sync_result',function(data){
     console.log("SYNCH:",data)
 
-    var users = data['all_users']
+    var users = data[data['active_users']<=data['all_users']?'all_users':'active_users']
+
+
     if (users){
         var span = $('<span>')
         for(var i=0;i<users.length;i++) {
@@ -112,6 +115,7 @@ socket.on('sync_result',function(data){
     // editor.setValue(data.program_text)
 });
 socket.on('user_left',function(data){
+    socket.emit('sync_request',{'room_details':room_details})
     jqconsole.Append('<div class="red-text darken-2"> USER '+data.username+' has left the room!</div>')
 });
 socket.on('editor_change_event',function(data){
@@ -156,17 +160,19 @@ socket.on('editor_change_event',function(data){
     console.log("Update Editor:",data)
 
 })
+
 function socket_join_room(user_name,room_name){
     console.log(user_name,room_name)
     if(!room_name&&user_name.username!==undefined&&user_name.room!==undefined){
         room_name = user_name.room
         user_name = user_name.username
     }
+    room_details = {username:user_name,room:room_name}
     if(user_name==""){
         $("#enter_your_name").modal({dismissible:false})
-        $("#enter_your_name").modal("open")
+        $("#enter_your_name").modal("open");
+        return
     }
-    room_details = {username:user_name,room:room_name}
     console.log("OK JOIN!!!!",room_details)
     socket.emit('join',room_details)
 }

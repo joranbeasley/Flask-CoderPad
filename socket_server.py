@@ -1,3 +1,5 @@
+import random
+import string
 import traceback
 
 from flask import current_app, Flask, request
@@ -22,7 +24,9 @@ def on_join(data):
     room = Room.query.filter_by(room_name=room_name).first()
     if not room or not room.active:
         disconnect()
-
+    if hasattr(current_user,'id') and current_user.id == room.owner_id:
+        User.query.filter_by(id=current_user.id).update(dict(sid = request.sid))
+        db.session.commit()
     if room.require_registered:
         if current_user.is_anonymous:
             disconnect()
@@ -42,13 +46,15 @@ def on_join(data):
     emit('user_list', {'active_users':active_users.setdefault(room.room_name,[]),
                        'program_text':get_latest_prog(room.room_name)},broadcast=False)
     # emit('sync',{'program_text':get_latest_prog(room)},room=room,broadcast=False)
-    print "EMIT:psynch",{'program_text':get_latest_prog(room.room_name)}
+    # print "EMIT:psynch",{'program_text':get_latest_prog(room.room_name)}
     join_room(room.room_name)
     if current_user.is_anonymous:
-        active_users[room.room_name].append({'username':username})
+        active_users[room.room_name].append({'username':username,'id':random.choice(string.ascii_uppercase),"sid":request.sid})
     else:
         active_users[room.room_name].append(current_user.to_dict())
-    emit('user_joined',{'username':username}, room=room)
+    emit('user_joined',{'username':username}, room=room_name)
+
+
 @socketio.on('run')
 def on_run(data):
     emit('user_run', {'username': data['username']}, room=data['room'])
@@ -61,10 +67,12 @@ def on_speech(data):
 
 @socketio.on('leave')
 def on_leave(data):
+    print "GOODNIGHT?",data
     if not data:return
     username = data['username']
     room_name = data['room']
     room = Room.query.filter_by(room_name=room_name).first()
+    print "Leaving Room:",room_name,room
     if not room:
         print "NO ROOM ADIOS!!"
         disconnect()
@@ -74,27 +82,35 @@ def on_leave(data):
             print "NO ANON!!! ADIOS!!"
             disconnect()
             return
-        try:
-            idx = [u['username'] for u in active_users[room.room_name]].index(current_user.username)
-        except:
+    try:
+        idx = [u['username'] for u in active_users[room.room_name]].index(current_user.username)
+    except:
+        if current_user.is_anonymous:
+            try:
+                idx = [u.get('sid',-1) for u in active_users[room.room_name]].index(request.sid)
+            except:
+                idx = -1
+
+        if idx < 0:
             traceback.print_exc()
             print "NO IDX!!!"
             disconnect()
             return
-        else:
-            username = current_user.username
-            try:
-                user = User.query.filter_by(id=current_user.id).first()
-            except:
-                user = None
-            if not user:
-                user = Invitations.get_my_invitation()
-            user.sid=None
-            db.session.commit()
-            ex_user = active_users[room.room_name].pop(idx)
-            print "POPPED:",ex_user,"@",idx
+    if not current_user.is_anonymous:
+        username = current_user.username
+        try:
+            user = User.query.filter_by(id=current_user.id).first()
+        except:
+            user = None
+        if not user:
+            user = Invitations.get_my_invitation()
+        user.sid=None
+        db.session.commit()
+    ex_user = active_users[room.room_name].pop(idx)
+    print "POPPED:",ex_user,"@",idx
     leave_room(room_name)
-    emit('user_left', {'username': username}, room=room)
+
+    emit('user_left', {'username': username}, room=room_name)
 
 @socketio.on("focus_lost")
 def on_lost_focus(data):
@@ -108,7 +124,7 @@ def on_lost_focus(data):
         user.is_AFK = True
         db.session.commit()
     data['action'] = "LOST"
-    print 'focus_update', data, room.owner.sid
+    # print 'focus_update', data, room.owner.sid
     emit('focus_update', data, room=room.owner.sid)
 @socketio.on("focus_gained")
 def on_focus_gained(data):
@@ -135,8 +151,9 @@ def request_sync(user_details):
     if not room or not room.is_invited(current_user):
         disconnect()
     payload = {'program_text':get_latest_prog(room_name)}
-    if current_user.is_admin:
+    if hasattr(current_user,'is_admin') and current_user.is_admin:
         payload['active_users']=active_users[room_name]
+        print "ACTIVE USERS:",payload['active_users']
         active_ids = {u['id'] for u in payload['active_users']}
         payload['all_users']=[u.to_dict() for u in room.room_members()]
         for user in payload['all_users']:

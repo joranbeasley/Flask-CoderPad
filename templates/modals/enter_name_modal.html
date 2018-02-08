@@ -14,6 +14,11 @@
 <script>
     function name_entered(){
         console.log($("#username").val(),"{{ room.room_name }}")
+        room_details.username = $("#username").val()
+        $("#user_info").text(room_details.room+"-"+room_details.username+"*")
+        socket_join_room(room_details)
+        $("#enter_your_name").modal("close")
+
     }
     {% if  current_user.is_anonymous %}
 

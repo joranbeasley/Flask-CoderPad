@@ -17,8 +17,8 @@ def get_latest_prog(room_name):
 def update_latest_prog(room,prog_text):
     file_lock.acquire()
     cache_file = get_program_path(room)
-    with open(cache_file,"ab") as f:
-        f.seek(0)
+    with open(cache_file,"wb") as f:
+        # f.seek(0)
         f.write(prog_text)
     file_lock.release()
 

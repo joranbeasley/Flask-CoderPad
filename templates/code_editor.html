@@ -21,8 +21,8 @@
 
     <div class="col s7" id="users_div"></div>
     <div class="col s1">
-        {% if current_user.id == room.owner_id %}<a class="floating-btn modal-trigger" href="#invite_user"><i class="material-icons">group_add</i></a>{% endif %}</div>
-    <div class="col s2"><div class="right white-text">{{ room_name }}- {{ username }}</div>
+        {% if current_user.id == room.owner_id and room.invite_only %}<a class="floating-btn modal-trigger" href="#invite_user"><i class="material-icons">group_add</i></a>{% endif %}</div>
+    <div class="col s2"><div class="right white-text" id="user_info">{{ room.room_name }}- {{ username }}</div>
 
     </div>
 </div>
@@ -36,11 +36,13 @@
 </div>
 {% if current_user.is_admin and current_user.id == room.owner_id %}
     {% include "modals/welcome_modal.html" %}
+    {% if room.invite_only %}
     {% include "modals/invite_user_modal.html" %}
     <ul id='user-info-dropdown-template' class='dropdown-content'>
         <li><a href="#!" onclick="show_invite_link(this)">View Invite Link</a></li>
         <li><a href="#!" onclick="show_uninvite_prompt(this)">Uninvite User</a></li>
     </ul>
+    {% endif %}
     <script>
     function show_uninvite_prompt(ele){
         if (confirm("Really Remove: "+$(ele).data('target')['email']+"?")){
