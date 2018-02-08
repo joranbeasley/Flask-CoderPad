@@ -5,9 +5,14 @@ import random
 
 import re
 
+import os
+
+import datetime
 from flask import request, session
 from flask_login import LoginManager, login_user
 from flask_sqlalchemy import SQLAlchemy
+
+from room_util import get_progam_stat
 
 login_manager = LoginManager()
 db = SQLAlchemy()
@@ -125,6 +130,13 @@ class Room(db.Model):
                             backref=db.backref('owned_rooms', lazy=True))
     def room_members(self):
         return [self.owner,] + [User.create_guest(i.email_address) for i in self.invited_users]
+    def created(self):
+        st = get_progam_stat(self.room_name)
+        return datetime.datetime.fromtimestamp(st.st_ctime)
+    def last_modified(self):
+        st = get_progam_stat(self.room_name)
+        return datetime.datetime.fromtimestamp(st.st_mtime)
+
     def is_invited(self,user):
         if not self.require_registered:
             return True

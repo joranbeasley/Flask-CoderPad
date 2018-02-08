@@ -74,7 +74,9 @@
     }
     </script>
 {% endif %}
-
+{% if not room.invite_only %}
+{% include "modals/enter_name_modal.html" %}
+{% endif %}
 
 </body>
 <script>

@@ -112,6 +112,7 @@ def on_lost_focus(data):
     emit('focus_update', data, room=room.owner.sid)
 @socketio.on("focus_gained")
 def on_focus_gained(data):
+    print(data)
     room_name = data['room_details']['room']
     room = Room.query.filter_by(room_name=room_name).first()
     data['action']="GAINED"

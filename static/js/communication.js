@@ -157,11 +157,17 @@ socket.on('editor_change_event',function(data){
 
 })
 function socket_join_room(user_name,room_name){
-    if(!room_name&&user_name.username&&user_name.room){
+    console.log(user_name,room_name)
+    if(!room_name&&user_name.username!==undefined&&user_name.room!==undefined){
         room_name = user_name.room
         user_name = user_name.username
     }
+    if(user_name==""){
+        $("#enter_your_name").modal({dismissible:false})
+        $("#enter_your_name").modal("open")
+    }
     room_details = {username:user_name,room:room_name}
+    console.log("OK JOIN!!!!",room_details)
     socket.emit('join',room_details)
 }
 function socket_run(){

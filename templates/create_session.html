@@ -40,19 +40,32 @@
         </div>
       </div>
       <div class="row">
-        <div class="input-field col s4">
-            <input name="require_registered" type="checkbox" id="test6" checked="checked" />
-            <label for="test6">Require Login</label>
+        <div class="col s4">
+            <input name="invite_only" type="checkbox" id="invite_only" checked="checked" />
+            <label for="invite_only">Invite Only</label>
         </div>
-        <div class="input-field col s4">
-            <input name="invite_only" type="checkbox" id="test6" checked="checked" />
-            <label for="test6">Invite Only</label>
-        </div>
+          <div class="col s4" >
+                <div class="red-text hide" id="open_room_warning">This room is open to anyone with the room name!<i class="material-icons">warning</i> </div>
+          </div>
+          <div class="col s4" >
+                <button class="btn blue right">Create Session</button>
+          </div>
       </div>
 
-        <button class="btn blue">Create Session</button>
     </form>
   </div>
+<script>
+    $("#invite_only").on('change',function(){
+        if(!$('#invite_only').prop('checked')){
+            $("#open_room_warning").removeClass('hide')
+        }else{
+            $("#open_room_warning").addClass('hide')
 
+        }
+    });
+    function toggle_invite_only(){
+
+    }
+</script>
 </body>
 </html>

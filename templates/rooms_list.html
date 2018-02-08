@@ -10,22 +10,8 @@
 </head>
 <body class="container">
 
-<table border="1">
-    {% for room in rooms %}
-    <tr>
-        <td><a href="/session/{{ room.room_name }}">{{ room.room_name }}</a></td><td>
-    <div class="switch">
-    <label>
-      Off
-      <input onchange="notify(this,{{ room.id }})" type="checkbox" {% if room.active %}checked="checked"{% endif %}>
-      <span class="lever"></span>
-      Active
-    </label>
-  </div>
-    </td><td>{{ room.owner.realname }}</td><td>{{ active_users[room.room_name]|length }}/{{ room.room_members()|length }}</td>
-    </tr>
-    {% endfor %}
-</table>
+{% include "components/room_list_table.html" %}
+
 </body>
 <script>
     function notify(ele,room_id){

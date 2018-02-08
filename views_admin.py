@@ -5,6 +5,7 @@ from flask_login import login_required, current_user
 
 from languages import languages_ace
 from models import Room, User, db, Invitations
+from room_util import update_latest_prog
 from socket_server import active_users
 
 admin_views = Blueprint("admin_routes", "admin_routes")
@@ -19,8 +20,9 @@ def create_room():
         d = request.form.to_dict()
         d['active']=True
         d['owner_id'] = current_user.id
-        d['invite_only'] = d['invite_only'] == "on"
-        d['require_registered'] = d['require_registered'] == "on"
+        d['invite_only'] = d.get('invite_only',False) == "on"
+        d['require_registered'] = d.get('require_registered',False) == "on"
+        update_latest_prog(d['room_name'],'')
         Room.from_dict(d,commit=True)
         return redirect("/session/"+d['room_name'])
     ctx = dict(

@@ -1,0 +1,36 @@
+<tr>
+    <td>
+        {% if room.invite_only %}
+            <i class="material-icons green">lock_outline</i>
+        {% else %}
+            <i class="material-icons red">lock_open</i>
+        {% endif %}
+    </td>
+    <td>
+        <a href="/session/{{ room.room_name }}">{{ room.room_name }}</a>
+    </td>
+    <td>
+        <div class="switch">
+            <label>
+                Off
+                <input onchange="notify(this,{{ room.id }})" type="checkbox" {% if room.active %}checked="checked"{% endif %}>
+                <span class="lever"></span>
+                Active
+            </label>
+        </div>
+    </td>
+    <td>
+        {{ room.owner.realname }}
+    </td><td>
+        {{ active_users[room.room_name]|length }}/{{ room.room_members()|length }}
+    </td>
+    <td>
+        {{ room.created()|strftime("%b %d,%Y") }}
+    </td>
+    <td>
+        {{ room.last_modified()|strftime("%b %d,%Y") }}
+    </td>
+    <td>
+        <button onclick="delete_room({{ room.id }})" class="btn red"><i class="material-icons">delete_forever</i> </button>
+    </td>
+</tr>

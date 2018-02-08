@@ -1,0 +1,22 @@
+<div id="enter_your_name" class="modal">
+
+    <div class="modal-content">
+
+        <div class="row">Enter your name to enter this session</div>
+        <div class="row field-input"><input id="username" type="text" placeholder="Usernam"></div>
+    </div>
+    <div class="modal-footer">
+        <button class="btn" onclick="name_entered()">
+            OK
+        </button>
+    </div>
+</div>
+<script>
+    function name_entered(){
+        console.log($("#username").val(),"{{ room.room_name }}")
+    }
+    {% if  current_user.is_anonymous %}
+
+
+    {% endif %}
+</script>

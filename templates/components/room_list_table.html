@@ -1,0 +1,15 @@
+<table class="bordered">
+    <tr>
+        <th>public</th>
+        <th>name</th>
+        <th>active</th>
+        <th>owner</th>
+        <th>users</th>
+        <th>created</th>
+        <th>last_active</th>
+        <th></th>
+    </tr>
+    {% for room in rooms %}
+        {% include "fragments/room_table_row.html" %}
+    {% endfor %}
+</table>
