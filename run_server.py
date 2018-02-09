@@ -1,19 +1,19 @@
 import os
 
 import sys
-from sqlalchemy import MetaData
 
-from constants import CONFIG_FILE
-from socket_server import socketio
-from app import app
-from models import User,db,init_app as db_init_app
+from CoderPad.constants import CONFIG_FILE, DEFAULT_DB
+from CoderPad.coderpad_socket_server.socket_server import socketio
+from CoderPad.app import app
+from CoderPad.models import User,db,init_app as db_init_app
 def load_config(fpath):
     return dict([x.strip() for x in line.split("=")] for line in open(fpath,'rb') if "=" in line)
 
 if not os.path.exists(CONFIG_FILE):
-    db_uri = raw_input("Enter Database URI(sqlite:///./test.db):")
+
+    db_uri = raw_input("Enter Database URI(%s):"%DEFAULT_DB)
     db_user = db_password = db_database_name=""
-    if not db_uri:db_uri='sqlite:///./test.db'
+    if not db_uri:db_uri=DEFAULT_DB
     app.config['SQLALCHEMY_DATABASE_URI'] = db_uri
 else:
     config = load_config(CONFIG_FILE)

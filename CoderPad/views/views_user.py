@@ -1,13 +1,11 @@
 import base64
-import os
 import traceback
 
-from flask import Blueprint, flash, redirect, render_template, request, json, session
+from flask import Blueprint, redirect, render_template, request, session
 from flask_login import login_required, current_user, logout_user, login_user
 
-from languages import languages_ace
-from models import Room, User, db, Invitations, login_manager
-from socket_server import ActiveUsers
+from ..models import Room, User, Invitations
+from ..coderpad_socket_server.socket_server import ActiveUsers
 
 flask_views = Blueprint("main_routes", "main_routes")
 
@@ -45,7 +43,7 @@ def view_session(room_name,username=''):
     )
     if username in [x['username'] for x in ActiveUsers.get_room_users(room_name)]:
         return "You are already in this room... please check your other tabs and try again"
-    return render_template('code_editor.html',**ctx)
+    return render_template('code_editor.html', **ctx)
 
 @flask_views.route("/logout")
 @login_required

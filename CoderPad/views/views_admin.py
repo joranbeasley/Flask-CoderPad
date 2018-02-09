@@ -3,10 +3,10 @@ import json
 from flask import Blueprint, flash, redirect, request, render_template
 from flask_login import login_required, current_user
 
-from languages import languages_ace
-from models import Room, User, db, Invitations
-from room_util import update_latest_prog
-from socket_server import ActiveUsers
+from ..languages import languages_ace
+from ..models import Room, User, db, Invitations
+from ..coderpad_socket_server.room_util import update_latest_prog
+from ..coderpad_socket_server.socket_server import ActiveUsers
 
 admin_views = Blueprint("admin_routes", "admin_routes")
 
@@ -28,7 +28,7 @@ def create_room():
     ctx = dict(
         languages = sorted(languages_ace.items())
     )
-    return render_template('create_session.html',**ctx)
+    return render_template('create_session.html', **ctx)
 
 
 @admin_views.route("/invite/<room_name>", methods=["GET", "POST"])

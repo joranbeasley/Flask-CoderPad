@@ -5,7 +5,7 @@ import traceback
 from flask import Blueprint, request
 from flask_login import current_user, login_required
 
-from models import User, Invitations, Room, db
+from ..models import User, Invitations, Room, db
 
 api = Blueprint('api', __name__)
 
