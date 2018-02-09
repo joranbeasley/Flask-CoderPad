@@ -15,7 +15,7 @@ flask_views = Blueprint("main_routes", "main_routes")
 @flask_views.route("/")
 @login_required
 def show_rooms():
-    return redirect("/admin/list_rooms")
+    return redirect("/admin")
 
 @flask_views.route("/session/<room_name>")
 def view_session(room_name,username=''):

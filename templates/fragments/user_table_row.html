@@ -1,0 +1,34 @@
+<tr>
+
+    <td>
+        {% if user.id == current_user.id %}
+            <i class="material-icons grey">lock_outline</i>
+        {% endif %}
+        {{ user.username }}
+
+    </td>
+    <td>
+        <div class="switch {% if user.id == current_user.id %}disabled{% endif %}">
+            <label>
+                Off
+                <input {% if user.id == current_user.id %}disabled{% endif %} onchange="toggle_user_active(this,{{ user.id }})" type="checkbox" {% if user.is_active %}checked="checked"{% endif %}>
+                <span class="lever"></span>
+                Active
+            </label>
+        </div>
+    </td>
+    <td>
+        {{ user.realname }} &lt; {{ user.email }} &gt;
+    </td>
+    <td>
+        {% if user.is_admin %}ADMIN{% endif %}
+
+    </td>
+    <td>
+        {% if user.id == current_user.id %}
+            <i class="material-icons grey">lock_outline</i>
+        {% else %}
+            <button onclick="delete_user({{ user.id }})" class="btn red"><i class="material-icons">delete_forever</i> </button>
+        {% endif %}
+    </td>
+</tr>

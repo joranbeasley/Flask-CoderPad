@@ -17,11 +17,16 @@ from room_util import get_progam_stat
 login_manager = LoginManager()
 db = SQLAlchemy()
 
+def init_app(app):
+    db.app = app
+    db.init_app(db.app)
+    login_manager.init_app(app)
+    login_manager.login_view = "main_routes.do_login"
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    sid = db.Column(db.String(80), unique=True, nullable=False)
+    sid = db.Column(db.String(80), unique=True, nullable=True,default=None)
     password = db.Column(db.String(80), nullable=False)
     realname = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -40,9 +45,9 @@ class User(db.Model):
             user = User()
             db.session.add(user)
         user.username = username
-        user.password = password
         user.email = email
         user.realname = realname
+        user.set_password(password)
         for k in kwargs:
             if isinstance(getattr(user,k,None),db.Column):
                 setattr(user,k,kwargs[k])
@@ -72,14 +77,19 @@ class User(db.Model):
             return self.realname.split()[0] or self.username
         except IndexError:
             return self.username
+    def set_password(self,password):
+        self.password = self.hash(password)
+    @staticmethod
+    def hash(password):
+        password=b"sa*%s*lt"%(password)
+        try:
+            return hashlib.md5(password).hexdigest()
+        except TypeError:
+            return hashlib.md5(password.encode("latin1")).hexdigest()
 
     @staticmethod
     def login(username, password):
-        try:
-            pw = hashlib.md5(password).hexdigest()
-        except TypeError:
-            pw = hashlib.md5(password.encode("latin1")).hexdigest()
-        print("PW:", pw)
+        pw = User.hash(password)
         user = User.query.filter_by(username=username,
                                     password=pw,
                                     ).first()
@@ -97,7 +107,7 @@ class User(db.Model):
         if not user and session.get("X-token-coderpad",None):
             invite_token = base64.b64decode(session['X-token-coderpad']).decode('latin1')
             invitation = Invitations.query.filter_by(invite_code=invite_token).first()
-            if invitation.room.active:
+            if invitation and invitation.room.active:
                 return User.create_guest(invitation.email_address)
         return user
 

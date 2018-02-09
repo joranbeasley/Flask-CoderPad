@@ -26,7 +26,7 @@
 <body>
 <div class="row">
     URL: <a href="{{ url }}"> {{ url }} </a>
-    <form class="col s12" method="post">
+    <form class="col s12" id="invite_form" method="post">
        <div class="row">
         <div class="input-field col s6">
           <input name="username" placeholder="Placeholder" id="first_name" type="text" class="validate">
@@ -49,9 +49,8 @@
           <label for="email">Email</label>
         </div>
       </div>
-
     </form>
   </div>
-<button class="btn blue">Invite</button>
+<button onclick="document.getElementById('invite_form').submit()" class="btn blue">Create New User</button>
 </body>
 </html>

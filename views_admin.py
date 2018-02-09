@@ -51,13 +51,46 @@ def invite(room_name):
     url = request.host_url.split("//", 1)[0] + "//" + request.host + "/session/" + room.room_name
     return render_template('invite_candidate.html', room=room, url=url)
 
-
-
-@admin_views.route("/list_rooms")
+@admin_views.route("/")
 @login_required
-def list_rooms():
+def admin_index():
     if not current_user.is_admin:
         return redirect("/login?next=/admin/list_rooms")
     rooms = Room.query.all()
     total_active_users = [len(room_ppl) for room_ppl in ActiveUsers.active_users_by_room.values()]
-    return render_template("rooms_list.html",rooms=rooms,active_users=ActiveUsers.active_users_by_room,ttl_active_users=total_active_users)
+    ctx = dict(
+        rooms=rooms, active_users=ActiveUsers.active_users_by_room, ttl_active_users=total_active_users,
+        users = User.query.all()
+    )
+    return render_template("admin_index.html", **ctx)
+
+
+@admin_views.route("/add_new_admin_user",methods=["GET","POST"])
+@login_required
+def new_admin_user():
+    if not current_user.is_admin:
+        return redirect("/login?next=/admin/add_new_admin_user")
+    if request.form:
+        data = request.form.to_dict()
+
+        user = User.get_or_create(**data)
+        user.is_admin = True
+        # db.session.add(Invitations(user=user, room=room))
+        db.session.commit()
+        flash("USER ADDED")
+        return redirect("/")
+    return render_template('invite_candidate.html')
+
+@admin_views.route("/delete/<what>/<item_pk>")
+@login_required
+def delete_item(what,item_pk):
+    item = None
+    if what == "user":
+        item = User.query.get(item_pk)
+    elif what == "room":
+        item = Room.query.get(item_pk)
+    if not item:
+        return {"error":"Unknown Item %r=>%r"%(what,pk)}
+    print "DELETE:",item
+    if request.args.get('as_json',False) or 1:
+        return json.dumps({"deleted_%s"%what:item.to_dict()})

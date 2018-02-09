@@ -2,3 +2,4 @@ flask
 Flask-SocketIO
 Flask-Login
 Flask-SQLAlchemy
+eventlet
