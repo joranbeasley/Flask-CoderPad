@@ -1,4 +1,4 @@
-
+from __future__ import print_function
 from socket_server import socketio
 from app import app
 

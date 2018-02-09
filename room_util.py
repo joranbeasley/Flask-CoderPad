@@ -8,7 +8,10 @@ file_lock = Lock()
 def get_program_path(room_name):
     base_path =os.path.join(os.path.dirname(__file__),'sessions')
     # if not os.path.exists(base_path):
-    os.makedirs(base_path,exist_ok=True)
+    try:
+        os.makedirs(base_path)
+    except (IOError, Exception):
+        pass
     return os.path.join(base_path,'%s.program'%room_name)
 def get_progam_stat(room_name):
     return os.stat(get_program_path(room_name))

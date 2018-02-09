@@ -7,12 +7,15 @@ from flask_login import login_required, current_user, logout_user, login_user
 
 from languages import languages_ace
 from models import Room, User, db, Invitations, login_manager
-from socket_server import active_users
+from socket_server import ActiveUsers
 
 flask_views = Blueprint("main_routes", "main_routes")
 
 
-
+@flask_views.route("/")
+@login_required
+def show_rooms():
+    return redirect("/admin/list_rooms")
 
 @flask_views.route("/session/<room_name>")
 def view_session(room_name,username=''):
@@ -40,7 +43,7 @@ def view_session(room_name,username=''):
         room = room.to_dict(),
         username=username
     )
-    if username in [x['username'] for x in active_users.get(room_name,[])]:
+    if username in [x['username'] for x in ActiveUsers.get_room_users(room_name)]:
         return "You are already in this room... please check your other tabs and try again"
     return render_template('code_editor.html',**ctx)
 

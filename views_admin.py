@@ -6,7 +6,7 @@ from flask_login import login_required, current_user
 from languages import languages_ace
 from models import Room, User, db, Invitations
 from room_util import update_latest_prog
-from socket_server import active_users
+from socket_server import ActiveUsers
 
 admin_views = Blueprint("admin_routes", "admin_routes")
 
@@ -51,11 +51,7 @@ def invite(room_name):
     url = request.host_url.split("//", 1)[0] + "//" + request.host + "/session/" + room.room_name
     return render_template('invite_candidate.html', room=room, url=url)
 
-# @admin_views.route("/room_activation/<room_id>/<enabled>")
-# @login_required
-# def list_rooms(room_id,enabled):
-#     Room.query.filter_by(id=room_id).update(active=bool(int(enabled)))
-#     db.session.commit()
+
 
 @admin_views.route("/list_rooms")
 @login_required
@@ -63,5 +59,5 @@ def list_rooms():
     if not current_user.is_admin:
         return redirect("/login?next=/admin/list_rooms")
     rooms = Room.query.all()
-    total_active_users = [len(room_ppl) for room_ppl in active_users.values()]
-    return render_template("rooms_list.html",rooms=rooms,active_users=active_users,ttl_active_users=total_active_users)
+    total_active_users = [len(room_ppl) for room_ppl in ActiveUsers.active_users_by_room.values()]
+    return render_template("rooms_list.html",rooms=rooms,active_users=ActiveUsers.active_users_by_room,ttl_active_users=total_active_users)
