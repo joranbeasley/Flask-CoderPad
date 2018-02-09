@@ -75,8 +75,13 @@ class User(db.Model):
 
     @staticmethod
     def login(username, password):
+        try:
+            pw = hashlib.md5(password).hexdigest()
+        except TypeError:
+            pw = hashlib.md5(password.encode("latin1")).hexdigest()
+        print("PW:", pw)
         user = User.query.filter_by(username=username,
-                                    password=hashlib.md5(password).hexdigest()
+                                    password=pw,
                                     ).first()
         if user:
             login_user(user)
@@ -90,7 +95,7 @@ class User(db.Model):
         except:
             pass
         if not user and session.get("X-token-coderpad",None):
-            invite_token = base64.b64decode(session['X-token-coderpad'])
+            invite_token = base64.b64decode(session['X-token-coderpad']).decode('latin1')
             invitation = Invitations.query.filter_by(invite_code=invite_token).first()
             if invitation.room.active:
                 return User.create_guest(invitation.email_address)

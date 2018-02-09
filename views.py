@@ -6,7 +6,7 @@ from flask import Blueprint, flash, redirect, render_template, request, json, se
 from flask_login import login_required, current_user, logout_user, login_user
 
 from languages import languages_ace
-from models import Room, User, db, Invitations
+from models import Room, User, db, Invitations, login_manager
 from socket_server import active_users
 
 flask_views = Blueprint("main_routes", "main_routes")
@@ -51,6 +51,7 @@ def do_logout():
     return redirect("/login")
 
 @flask_views.route("/login",methods=["GET","POST"])
+# @login_manager.login_view
 def do_login():
     if request.form:
         user = request.form.get('username',None)
@@ -66,8 +67,8 @@ def join_room(room_id,token):
         return "sorry buddy"
     if not invitation.room.active:
         return "Room No Longer Active"
-    session["X-token-coderpad"] = base64.b64encode(token)
-    print "OK CREATED TOKEN:",request,session["X-token-coderpad"]
+    session["X-token-coderpad"] = base64.b64encode(token.encode('latin1'))
+    print("OK CREATED TOKEN:", request, session["X-token-coderpad"])
     try:
         login_user(User.user_loader("ASDASD"),force=True)
     except:

@@ -10,7 +10,29 @@ from models import User, Room, db, Invitations
 from room_util import get_latest_prog, update_latest_prog
 
 
-active_users = {}
+class Users:
+    active_users_by_room={}
+    active_users_by_sid={}
+    active_users_by_name={}
+    active_sids = set()
+    pending_sids = set()
+    @staticmethod
+    def get_by_sid(sid):
+        return Users.active_users_by_sid
+    @staticmethod
+    def is_active(sid):
+        return sid in Users.active_sids
+    @staticmethod
+    def add_to_room(room_name,userDataDict):
+        my_sid = request.sid
+        my_rooms = userDataDict.setdefault('rooms', set())
+        if room_name in my_rooms:
+            raise Exception("Already in room!")
+       #  userDataDict['sid'] = my_sid
+       # .add(room_name)
+       #  Users.pending_sids.remove(my_sid)
+       #  userDataDict['username']
+
 socketio = SocketIO()
 @socketio.on('join')
 def on_join(data):
@@ -40,7 +62,7 @@ def on_join(data):
         user.sid=request.sid
         db.session.commit()
         if room.invite_only and not room.is_invited(current_user):
-            print "User %s is not invited to room %s"%(current_user,room)
+            print("User %s is not invited to room %s"%(current_user,room))
             disconnect()
 
     emit('user_list', {'active_users':active_users.setdefault(room.room_name,[]),
@@ -62,24 +84,24 @@ def on_run(data):
 @socketio.on('speak')
 def on_speech(data):
     data['message'] = data['message'].replace("\"","&quot;").replace("'","&#39;")
-    print "SAY:",data
+    print( "SAY:",data )
     emit('user_speech', data, room=data['room_details']['room'])
 
 @socketio.on('leave')
 def on_leave(data):
-    print "GOODNIGHT?",data
+    print("GOODNIGHT?", data)
     if not data:return
     username = data['username']
     room_name = data['room']
     room = Room.query.filter_by(room_name=room_name).first()
-    print "Leaving Room:",room_name,room
+    print("Leaving Room:", room_name, room)
     if not room:
-        print "NO ROOM ADIOS!!"
+        print("NO ROOM ADIOS!!")
         disconnect()
         return
     if room.require_registered:
         if current_user.is_anonymous:
-            print "NO ANON!!! ADIOS!!"
+            print("NO ANON!!! ADIOS!!")
             disconnect()
             return
     try:
@@ -93,7 +115,7 @@ def on_leave(data):
 
         if idx < 0:
             traceback.print_exc()
-            print "NO IDX!!!"
+            print("NO IDX!!!")
             disconnect()
             return
     if not current_user.is_anonymous:
@@ -107,7 +129,7 @@ def on_leave(data):
         user.sid=None
         db.session.commit()
     ex_user = active_users[room.room_name].pop(idx)
-    print "POPPED:",ex_user,"@",idx
+    print("POPPED:", ex_user, "@", idx)
     leave_room(room_name)
 
     emit('user_left', {'username': username}, room=room_name)
@@ -153,7 +175,7 @@ def request_sync(user_details):
     payload = {'program_text':get_latest_prog(room_name)}
     if hasattr(current_user,'is_admin') and current_user.is_admin:
         payload['active_users']=active_users[room_name]
-        print "ACTIVE USERS:",payload['active_users']
+        print("ACTIVE USERS:", payload['active_users'])
         active_ids = {u['id'] for u in payload['active_users']}
         payload['all_users']=[u.to_dict() for u in room.room_members()]
         for user in payload['all_users']:

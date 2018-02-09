@@ -19,5 +19,5 @@ db.app = app
 db.init_app(db.app)
 socketio.init_app(app)
 login_manager.init_app(app)
-login_manager.login_view = "do_login"
+login_manager.login_view = "main_routes.do_login"
 MyFilters.init_app(app)
