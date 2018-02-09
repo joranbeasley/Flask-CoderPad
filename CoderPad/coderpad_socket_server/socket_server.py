@@ -106,7 +106,7 @@ def on_disconnect():
     ActiveUsers.user_disconnected()
 @socketio.on('join')
 def on_join(data):
-    print("JOIN:",data,request.sid)
+    log.info("JOIN:",data,request.sid)
     try:
         user = User.query.filter_by(id=current_user.id)
     except:
