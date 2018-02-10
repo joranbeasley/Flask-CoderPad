@@ -91,6 +91,10 @@ def delete_item(what,item_pk):
         item = Room.query.get(item_pk)
     if not item:
         return {"error":"Unknown Item %r=>%r"%(what,pk)}
-    print "DELETE:",item
-    if request.args.get('as_json',False) or 1:
+    # item.delete()
+    db.session.delete(item)
+    db.session.commit()
+
+    if request.args.get('as_json',False):
         return json.dumps({"deleted_%s"%what:item.to_dict()})
+    return redirect("/admin")

@@ -1,12 +1,13 @@
 import json
 import os
 from threading import Lock
+from CoderPad.constants import CONFIG_DIR
 
 
 
 file_lock = Lock()
 def get_program_path(room_name):
-    base_path =os.path.join(os.path.dirname(__file__),'sessions')
+    base_path =os.path.join(CONFIG_DIR,'sessions')
     # if not os.path.exists(base_path):
     try:
         os.makedirs(base_path)

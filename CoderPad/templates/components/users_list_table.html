@@ -11,3 +11,12 @@
         {% include "fragments/user_table_row.html" %}
     {% endfor %}
 </table>
+<script>
+    function delete_user(username,user_id){
+        console.log("Delete?",username,user_id)
+
+        if( confirm("Really Delete User: "+username + "?")){
+            document.location.href= "/admin/delete/user/"+user_id.toString()
+        }
+    }
+</script>

@@ -28,7 +28,7 @@
         {% if user.id == current_user.id %}
             <i class="material-icons grey">lock_outline</i>
         {% else %}
-            <button onclick="delete_user({{ user.id }})" class="btn red"><i class="material-icons">delete_forever</i> </button>
+            <button onclick='delete_user("{{ user.username }}",{{ user.id }})' class="btn red"><i class="material-icons">delete_forever</i> </button>
         {% endif %}
     </td>
 </tr>
