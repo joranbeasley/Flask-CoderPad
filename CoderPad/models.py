@@ -5,6 +5,8 @@ import random
 import re
 
 import datetime
+from contextlib import contextmanager
+
 from flask import session
 from flask_login import LoginManager, login_user
 from flask_sqlalchemy import SQLAlchemy
@@ -19,6 +21,20 @@ def init_app(app):
     db.init_app(db.app)
     login_manager.init_app(app)
     login_manager.login_view = "main_routes.do_login"
+
+@contextmanager
+def get_db_context(uri):
+    from app import app
+    other_uri = app.config.get('SQLALCHEMY_DATABASE_URI',None)
+    app.config['SQLALCHEMY_DATABASE_URI']=uri
+    init_app(app)
+    yield app
+    if not other_uri:
+        del app.config['SQLALCHEMY_DATABASE_URI']
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI']=other_uri
+
+
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
