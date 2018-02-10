@@ -30,8 +30,9 @@ def ask_yesno(prompt,choices='yn',error_msg="Invalid Input",default=None):
                        test=lambda x:len(x) and x[0].lower() in choices,
                        error_msg=error_msg,allow_null=default and default in choices)
 
-    if default and not result: return default
-    return result[0].lower() == "y"
+    if default and not result:
+        result = default
+    return result[0].lower() == choices[0]
 
 def email_input(prompt,error_msg="please enter a valid email address",
                 allow_null=False,default=None):
