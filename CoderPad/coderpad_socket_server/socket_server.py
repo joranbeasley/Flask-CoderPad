@@ -54,7 +54,8 @@ class ActiveUsers:
             ActiveUsers.active_sids_by_room[room].remove(sid)
             remove_from_roomlist(room)
 
-        log.info("removed_user:", userData)
+        log.info("removed_user: %s"%userData)
+        return userData
     @staticmethod
     def user_disconnected():
         if request.sid in ActiveUsers.pending_sids:
@@ -63,7 +64,7 @@ class ActiveUsers:
             return
         if request.sid not in ActiveUsers.active_sids:
             raise Exception("User is not active")
-        ActiveUsers.remove_user(request.sid)
+        return ActiveUsers.remove_user(request.sid)
 
     @staticmethod
     def add_to_room(room_name,userDataDict):
@@ -103,10 +104,14 @@ def on_connect():
     ActiveUsers.user_connected()
 @socketio.on("disconnect")
 def on_disconnect():
-    ActiveUsers.user_disconnected()
+    userData = ActiveUsers.user_disconnected()
+    for room_name in userData['rooms']:
+        emit('user_left', {'username': userData['username']}, room=room_name)
+
+
 @socketio.on('join')
 def on_join(data):
-    log.info("JOIN:",data,request.sid)
+    log.info("JOIN:%s - %s"%(data,request.sid))
     try:
         user = User.query.filter_by(id=current_user.id)
     except:
@@ -161,12 +166,13 @@ def on_speech(data):
 
 @socketio.on('leave')
 def on_leave(data):
-    print("GOODNIGHT?", data)
-    if not data:return
-    username = data['username']
-    room_name = data['room']
-    room = Room.query.filter_by(room_name=room_name).first()
-    emit('user_left', {'username': username}, room=room_name)
+    pass
+    # print("GOODNIGHT?", data)
+    # if not data:return
+    # username = data['username']
+    # room_name = data['room']
+    # room = Room.query.filter_by(room_name=room_name).first()
+    # emit('user_left', {'username': username}, room=room_name)
 
 @socketio.on("focus_lost")
 def on_lost_focus(data):
