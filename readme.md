@@ -2,7 +2,7 @@
 
 INSTALL
 -------
-`pip install git+git://github.com/joranbeasley/CodingPad#egg=CoderPad -U`
+`pip install git+git://github.com/joranbeasley/FlaskCodingPad#egg=CoderPad -U`
 
 **additionally requires** eventlet or some other backend supported by [Flask-Socketio](https://flask-socketio.readthedocs.io/en/latest/#requirements)
 
