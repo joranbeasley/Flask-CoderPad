@@ -1,6 +1,6 @@
 import base64
 
-from languages import languages_ace
+from CoderPad.languages import languages_ace
 
 
 class MyFilters:
