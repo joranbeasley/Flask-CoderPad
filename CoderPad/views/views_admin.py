@@ -87,8 +87,11 @@ def delete_item(what,item_pk):
     item = None
     if what == "user":
         item = User.query.get(item_pk)
+
     elif what == "room":
         item = Room.query.get(item_pk)
+        for invite in item.invited_users:
+            db.session.delete(invite)
     if not item:
         return {"error":"Unknown Item %r=>%r"%(what,pk)}
     # item.delete()
