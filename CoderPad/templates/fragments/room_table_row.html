@@ -31,6 +31,6 @@
         {{ room.last_modified()|strftime("%b %d,%Y") }}
     </td>
     <td>
-        <button onclick="delete_room({{ room.id }})" class="btn red"><i class="material-icons">delete_forever</i> </button>
+        <button onclick="delete_room('{{ room.room_name }}',{{ room.id }})" class="btn red"><i class="material-icons">delete_forever</i> </button>
     </td>
 </tr>
