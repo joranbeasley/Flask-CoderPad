@@ -1,11 +1,11 @@
 from flask import Flask
 # from flask_login import login_manager
 
-from filters import MyFilters
+from CoderPad.filters import MyFilters
 from CoderPad.coderpad_socket_server.socket_server import socketio
-from .views import flask_views
-from .views import api_views
-from .views.views_admin import admin_views
+from CoderPad.views import flask_views
+from CoderPad.views import api_views
+from CoderPad.views.views_admin import admin_views
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'secret!ShhHHHHH!!!@'
