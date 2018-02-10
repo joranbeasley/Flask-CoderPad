@@ -1,2 +1,2 @@
-include-recursive CoderPad/static/*
-include-recursive CoderPad/templates/*
+recursive-include CoderPad/static *
+recursive-include CoderPad/templates *
