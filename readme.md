@@ -8,7 +8,9 @@ INSTALL
 
 RUN THE SERVER
 --------------
-`serve-coderpad` note that this should be in the scripts folder of your python install
+(note that these scripts should be found in your python scripts folder, which hopefully is already on your path, assuming that you install the package with pip)
+
+`serve-coderpad` 
 
 you can use the 
 
