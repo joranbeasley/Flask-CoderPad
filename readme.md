@@ -4,6 +4,8 @@ INSTALL
 -------
 `pip install git+git://github.com/joranbeasley/Flask-CoderPad#egg=CoderPad -U`
 
+**Supports at least** Python2.7 and Python3.6 and i assume all versions between, it does not support 2.6!
+
 **additionally requires** eventlet or some other backend supported by [Flask-Socketio](https://flask-socketio.readthedocs.io/en/latest/#requirements)
 
 RUN THE SERVER
