@@ -1,3 +1,9 @@
+"""
+Simple script to help setup and configure a site
+
+
+"""
+
 from collections import OrderedDict
 
 import sys
