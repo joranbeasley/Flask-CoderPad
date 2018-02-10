@@ -22,7 +22,7 @@ def main():
 
 
     config = load_config(CONFIG_FILE)
-    if 'db_uri' not in config:
+    if not config.get('db_uri',None):
         sys.stderr.write("ERROR: No Database found please run `setup-coderpad --wizard`\n")
         sys.exit(-1)
     app.config['SQLALCHEMY_DATABASE_URI'] = config['db_uri']

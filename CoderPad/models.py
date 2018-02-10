@@ -24,7 +24,7 @@ def init_app(app):
 
 @contextmanager
 def get_db_context(uri):
-    from app import app
+    from CoderPad.app import app
     other_uri = app.config.get('SQLALCHEMY_DATABASE_URI',None)
     app.config['SQLALCHEMY_DATABASE_URI']=uri
     init_app(app)
