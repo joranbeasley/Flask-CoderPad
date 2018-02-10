@@ -1,19 +1,26 @@
+'''
+simple script to serve coderpad
+the first time its run it should prompt you for some setup info
+
+'''
 import os
 
 import sys
 import traceback
 
+from CoderPad.configure import DoSetupCoderpadSite
 from CoderPad.constants import CONFIG_FILE, DEFAULT_DB, load_config
 from CoderPad.coderpad_socket_server.socket_server import socketio
 from CoderPad.app import app
 from CoderPad.models import User,db,init_app as db_init_app
-from setup_server import DoSetupCoderpadSite, ask_yesno
 
-if not os.path.exists(CONFIG_FILE) and len(sys.argv)< 2:
-    DoSetupCoderpadSite(['-w'])
-elif len(sys.argv)>1:
-    DoSetupCoderpadSite()
-if __name__ == '__main__':
+def main():
+    if not os.path.exists(CONFIG_FILE) and len(sys.argv)< 2:
+        DoSetupCoderpadSite(['-w'])
+    elif len(sys.argv)>1:
+        DoSetupCoderpadSite()
+
+
     config = load_config(CONFIG_FILE)
     if 'db_uri' not in config:
         sys.stderr.write("ERROR: No Database found please run `setup-coderpad --wizard`\n")
@@ -36,3 +43,5 @@ if __name__ == '__main__':
     print("NOTE that your can run this with the `--create-admin` flag to create a new admin user")
     socketio.run(app,config['host'],config['port'])
 
+if __name__ == "__main__":
+    main()
