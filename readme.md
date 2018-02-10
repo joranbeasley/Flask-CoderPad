@@ -1,3 +1,4 @@
+![Demo Of Coderpad](docs/demo1.gif)
 WISHLIST
 --------
 
