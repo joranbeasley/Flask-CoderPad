@@ -1,4 +1,5 @@
 import os
+import traceback
 from collections import OrderedDict
 
 import sys
@@ -13,8 +14,9 @@ DEFAULT_DB = "sqlite:///"+DEFAULT_DB_PATH
 
 def load_config(fpath=CONFIG_FILE):
     try:
-        return OrderedDict([x.strip().replace("\\n","\n") for x in line.split("=")] for line in open(fpath,'rb') if "=" in line)
+        return OrderedDict([x.strip().replace("\\n","\n") for x in line.decode('latin1').split("=")] for line in open(fpath,'rb') if b"=" in line)
     except:
+        traceback.print_exc()
         return OrderedDict.fromkeys('host port db_uri prompt stmp_server stmp_username stmp_password'.split())
 
 def save_config(configItems,fpath=CONFIG_FILE):
