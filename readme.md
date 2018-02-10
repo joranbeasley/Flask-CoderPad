@@ -1,4 +1,19 @@
 ![Demo Of Coderpad](docs/demo1.gif)
+
+INSTALL
+-------
+`pip install git+git://github.com/joranbeasley/CoderPad#egg=CoderPad -U`
+
+**additionally requires** eventlet or some other backend supported by [Flask-Socketio](https://flask-socketio.readthedocs.io/en/latest/#requirements)
+
+RUN THE SERVER
+--------------
+`serve-coderpad` note that this should be in the scripts folder of your python install
+
+you can use the 
+
+`setup-coderpad` command to configure your server (This should run automagically the first time you run the server)
+
 WISHLIST
 --------
 

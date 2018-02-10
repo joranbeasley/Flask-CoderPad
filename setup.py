@@ -14,6 +14,7 @@ setup(
             'configure-coderpad=CoderPad.configure:DoSetupCoderpadSite'
         ],
     },
+    install_requires=['flask','Flask-SQLAlchemy','Flask-Socketio','Flask-Login'],
     author='Joran Beasley',
     author_email='joranbeasley@gmail.com',
     description='Interactive Shared Coding Environment For Interviews'
