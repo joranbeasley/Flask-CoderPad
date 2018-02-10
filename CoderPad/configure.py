@@ -10,6 +10,8 @@ import sys
 
 import re
 
+import os
+
 from CoderPad.constants import DEFAULT_DB, CONFIG_FILE, load_config, save_config
 from CoderPad.models import get_db_context, db, User
 
@@ -20,6 +22,24 @@ def py23_input(prompt=''):
     except:
         return input(prompt)
 
+def check_backend_server(warn=False):
+    installed_packages = os.popen('"%s" -m pip freeze'%sys.executable ).read().splitlines()
+    checks = {"eventlet":0,"gevent":0,"gevent-socketio":0}
+    def do_check():
+        if checks['eventlet']:
+            return True
+        return checks['gevent'] and checks['gevent-socketio']
+    for pkg in installed_packages:
+        for pkg_test in checks:
+            if pkg.startswith(pkg_test):
+                checks[pkg_test] = pkg
+                break;
+    if warn and not do_check():
+        sys.stderr.write(
+            "WARNING: You should install one of :\n  - eventlet\n - [gevent and gevent-websocket]\n")
+        sys.stderr.write(
+            "We will attempt to serve using werkzeug, but you are strongly advised to use one of the above python packages\n")
+    return do_check()
 def valid_input(prompt,test=lambda x:bool(x),error_msg="Invalid input",allow_null=False,default=None):
     if default and not allow_null:
         allow_null = True

@@ -8,7 +8,9 @@ import os
 import sys
 import traceback
 
-from CoderPad.configure import DoSetupCoderpadSite
+import time
+
+from CoderPad.configure import DoSetupCoderpadSite, check_backend_server, py23_input
 from CoderPad.constants import CONFIG_FILE, DEFAULT_DB, load_config
 from CoderPad.coderpad_socket_server.socket_server import socketio
 from CoderPad.app import app
@@ -19,7 +21,6 @@ def main():
         DoSetupCoderpadSite(['-w'])
     elif len(sys.argv)>1:
         DoSetupCoderpadSite()
-
 
     config = load_config(CONFIG_FILE)
     if not config.get('db_uri',None):
@@ -38,6 +39,10 @@ def main():
         sys.exit(-1)
     if not config['stmp_server']:
         sys.stderr.write("WARNING: STMP not setup, you will not be able to send emails... please run `setup-coderpad --configure-stmp`\n")
+    if not check_backend_server(warn=True):
+
+
+        py23_input("Hit Enter To Continue and serve with werkzeug.\nPress <ENTER>...")
     print("Serving on %s:%s"%(config['host'],config['port']))
     print("NOTE that you can change your config settings at %s"%CONFIG_FILE)
     print("NOTE that your can run this with the `--create-admin` flag to create a new admin user")
