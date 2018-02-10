@@ -10,6 +10,8 @@ import sys
 
 import re
 
+import os
+
 from CoderPad.constants import DEFAULT_DB, CONFIG_FILE, load_config, save_config
 from CoderPad.models import get_db_context, db, User
 
@@ -20,6 +22,8 @@ def py23_input(prompt=''):
     except:
         return input(prompt)
 
+def check_backend_server():
+    print(os.popen("pip freeze").read().splitlines())
 def valid_input(prompt,test=lambda x:bool(x),error_msg="Invalid input",allow_null=False,default=None):
     if default and not allow_null:
         allow_null = True
