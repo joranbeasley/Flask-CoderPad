@@ -1,27 +1,45 @@
 import base64
 import hashlib
-import json
 import random
 
 import re
 
-import os
-
 import datetime
-from flask import request, session
+from contextlib import contextmanager
+
+from flask import session
 from flask_login import LoginManager, login_user
 from flask_sqlalchemy import SQLAlchemy
 
-from room_util import get_progam_stat
+from CoderPad.coderpad_socket_server.room_util import get_progam_stat
 
 login_manager = LoginManager()
 db = SQLAlchemy()
+
+def init_app(app):
+    db.app = app
+    db.init_app(db.app)
+    login_manager.init_app(app)
+    login_manager.login_view = "main_routes.do_login"
+
+@contextmanager
+def get_db_context(uri):
+    from app import app
+    other_uri = app.config.get('SQLALCHEMY_DATABASE_URI',None)
+    app.config['SQLALCHEMY_DATABASE_URI']=uri
+    init_app(app)
+    yield app
+    if not other_uri:
+        del app.config['SQLALCHEMY_DATABASE_URI']
+    else:
+        app.config['SQLALCHEMY_DATABASE_URI']=other_uri
+
 
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    sid = db.Column(db.String(80), unique=True, nullable=False)
+    sid = db.Column(db.String(80), unique=True, nullable=True,default=None)
     password = db.Column(db.String(80), nullable=False)
     realname = db.Column(db.String(80), unique=True, nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -40,9 +58,9 @@ class User(db.Model):
             user = User()
             db.session.add(user)
         user.username = username
-        user.password = password
         user.email = email
         user.realname = realname
+        user.set_password(password)
         for k in kwargs:
             if isinstance(getattr(user,k,None),db.Column):
                 setattr(user,k,kwargs[k])
@@ -72,11 +90,21 @@ class User(db.Model):
             return self.realname.split()[0] or self.username
         except IndexError:
             return self.username
+    def set_password(self,password):
+        self.password = self.hash(password)
+    @staticmethod
+    def hash(password):
+        password=b"sa*%s*lt"%(password)
+        try:
+            return hashlib.md5(password).hexdigest()
+        except TypeError:
+            return hashlib.md5(password.encode("latin1")).hexdigest()
 
     @staticmethod
     def login(username, password):
+        pw = User.hash(password)
         user = User.query.filter_by(username=username,
-                                    password=hashlib.md5(password).hexdigest()
+                                    password=pw,
                                     ).first()
         if user:
             login_user(user)
@@ -90,9 +118,9 @@ class User(db.Model):
         except:
             pass
         if not user and session.get("X-token-coderpad",None):
-            invite_token = base64.b64decode(session['X-token-coderpad'])
+            invite_token = base64.b64decode(session['X-token-coderpad']).decode('latin1')
             invitation = Invitations.query.filter_by(invite_code=invite_token).first()
-            if invitation.room.active:
+            if invitation and invitation.room.active:
                 return User.create_guest(invitation.email_address)
         return user
 

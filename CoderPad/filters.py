@@ -20,6 +20,6 @@ class MyFilters:
     @staticmethod
     def encode(text,how):
         if how == "base64":
-            return base64.b64encode(text)
+            return base64.b64encode(text.encode("latin1"))
         elif how == "hex":
-            return "".join(["\\x%02x"%(ord(c),)for c in text])
+            return "".join(["\\x%02x"%(ord(c) if isinstance(c,(str,bytes)) else c,)for c in text])

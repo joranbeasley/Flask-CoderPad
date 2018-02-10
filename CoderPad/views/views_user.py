@@ -1,18 +1,19 @@
 import base64
-import os
 import traceback
 
-from flask import Blueprint, flash, redirect, render_template, request, json, session
+from flask import Blueprint, redirect, render_template, request, session
 from flask_login import login_required, current_user, logout_user, login_user
 
-from languages import languages_ace
-from models import Room, User, db, Invitations
-from socket_server import active_users
+from ..models import Room, User, Invitations
+from ..coderpad_socket_server.socket_server import ActiveUsers
 
 flask_views = Blueprint("main_routes", "main_routes")
 
 
-
+@flask_views.route("/")
+@login_required
+def show_rooms():
+    return redirect("/admin")
 
 @flask_views.route("/session/<room_name>")
 def view_session(room_name,username=''):
@@ -40,9 +41,9 @@ def view_session(room_name,username=''):
         room = room.to_dict(),
         username=username
     )
-    if username in [x['username'] for x in active_users.get(room_name,[])]:
+    if username in [x['username'] for x in ActiveUsers.get_room_users(room_name)]:
         return "You are already in this room... please check your other tabs and try again"
-    return render_template('code_editor.html',**ctx)
+    return render_template('code_editor.html', **ctx)
 
 @flask_views.route("/logout")
 @login_required
@@ -51,6 +52,7 @@ def do_logout():
     return redirect("/login")
 
 @flask_views.route("/login",methods=["GET","POST"])
+# @login_manager.login_view
 def do_login():
     if request.form:
         user = request.form.get('username',None)
@@ -66,8 +68,8 @@ def join_room(room_id,token):
         return "sorry buddy"
     if not invitation.room.active:
         return "Room No Longer Active"
-    session["X-token-coderpad"] = base64.b64encode(token)
-    print "OK CREATED TOKEN:",request,session["X-token-coderpad"]
+    session["X-token-coderpad"] = base64.b64encode(token.encode('latin1'))
+    print("OK CREATED TOKEN:", request, session["X-token-coderpad"])
     try:
         login_user(User.user_loader("ASDASD"),force=True)
     except:

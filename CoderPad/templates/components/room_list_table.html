@@ -7,9 +7,12 @@
         <th>users</th>
         <th>created</th>
         <th>last_active</th>
-        <th></th>
+        <th><a href="/admin/create_room" class="btn green">Create Room</a> </th>
     </tr>
+
     {% for room in rooms %}
         {% include "fragments/room_table_row.html" %}
+        {% else %}
+        <tr><td colspan="8"><h3>You Havent Got Any Rooms Yet. Go Ahead and create some!</h3></td></tr>
     {% endfor %}
 </table>

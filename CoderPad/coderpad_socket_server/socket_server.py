@@ -6,14 +6,107 @@ from flask import current_app, Flask, request
 from flask_login import current_user
 from flask_socketio import join_room, leave_room, SocketIO, disconnect, emit
 
-from models import User, Room, db, Invitations
+from ..models import User, Room, db, Invitations
 from room_util import get_latest_prog, update_latest_prog
 
+import logging
+logging.basicConfig(level=logging.DEBUG)
+log = logging.getLogger('coderpad-socketio')
+# logN = logging.getLogger('NOTIFY')
+def emit2(event,*args,**kwargs):
+    # if kwargs.get('broadcast',True) is False:
+    #     logN.info("EMIT: %r => %s %s"%(event,args,kwargs))
+    # else:
+    #     logB.info("EMIT: %r => %s %s"%(event,args,kwargs))
+    emit(event,*args,**kwargs)
+class ActiveUsers:
+    active_users_by_room={}
+    active_users_by_sid={}
+    active_sids_by_room = {}
+    active_sids = set()
+    pending_sids = set()
+    @staticmethod
+    def get_by_sid(sid):
+        return ActiveUsers.active_users_by_sid[sid]
 
-active_users = {}
+
+    @staticmethod
+    def is_active(sid):
+        return sid in ActiveUsers.active_sids
+    @staticmethod
+    def user_connected():
+        ActiveUsers.pending_sids.add(request.sid)
+    @staticmethod
+    def get_room_users(room_name):
+        return ActiveUsers.active_users_by_room.setdefault(room_name,[])
+
+    @staticmethod
+    def remove_user(sid):
+        def remove_from_roomlist(room_name):
+            room_list = ActiveUsers.active_users_by_room[room]
+            idx = [u['sid'] for u in room_list].index(sid)
+            del room_list[idx]
+        ActiveUsers.active_sids.remove(sid)
+        userData = ActiveUsers.active_users_by_sid.pop(sid)
+        log.debug("Good bye: %s" % userData['username'])
+        for room in userData['rooms']:
+            log.debug("Leaving: %s" % room)
+            ActiveUsers.active_sids_by_room[room].remove(sid)
+            remove_from_roomlist(room)
+
+        log.info("removed_user:", userData)
+    @staticmethod
+    def user_disconnected():
+        if request.sid in ActiveUsers.pending_sids:
+            ActiveUsers.pending_sids.remove(request.sid)
+            log.info("User not authenticated yet, so nothing to do...")
+            return
+        if request.sid not in ActiveUsers.active_sids:
+            raise Exception("User is not active")
+        ActiveUsers.remove_user(request.sid)
+
+    @staticmethod
+    def add_to_room(room_name,userDataDict):
+        my_sid = request.sid
+        if my_sid not in ActiveUsers.pending_sids.union(ActiveUsers.active_sids):
+            raise Exception("User does not appear to have connected!")
+        if my_sid in ActiveUsers.pending_sids:
+            ActiveUsers.pending_sids.remove(my_sid)
+
+        my_rooms = userDataDict.setdefault('rooms', [])
+        if room_name in my_rooms:
+            raise Exception("Already in room!")
+        my_rooms.append(room_name)
+        userDataDict['sid'] = my_sid
+        ActiveUsers.active_users_by_room.setdefault(room_name,[]).append(userDataDict)
+        ActiveUsers.active_sids_by_room.setdefault(room_name,set()).add(request.sid)
+        ActiveUsers.active_users_by_sid[request.sid] = userDataDict
+        ActiveUsers.active_sids.add(request.sid)
+        log.info("ADDED USER %s TO %s"%(userDataDict,room_name))
+       # .add(room_name)
+       #  Users.pending_sids.remove(my_sid)
+       #  userDataDict['username']
+    @staticmethod
+    def is_authenticated(room_name):
+        return request.sid in ActiveUsers.active_sids_by_room[room_name]
+    @staticmethod
+    def require_authentication(fn):
+        def _inner_fn(*args,**kwargs):
+            if not request.sid in ActiveUsers.active_sids:
+                disconnect()
+            return fn(*args,**kwargs)
+        return _inner_fn
 socketio = SocketIO()
+@socketio.on('connect')
+def on_connect():
+    print( "OK CONNECTED:",request.sid )
+    ActiveUsers.user_connected()
+@socketio.on("disconnect")
+def on_disconnect():
+    ActiveUsers.user_disconnected()
 @socketio.on('join')
 def on_join(data):
+    log.info("JOIN:",data,request.sid)
     try:
         user = User.query.filter_by(id=current_user.id)
     except:
@@ -40,76 +133,39 @@ def on_join(data):
         user.sid=request.sid
         db.session.commit()
         if room.invite_only and not room.is_invited(current_user):
-            print "User %s is not invited to room %s"%(current_user,room)
+            print("User %s is not invited to room %s"%(current_user,room))
             disconnect()
-
-    emit('user_list', {'active_users':active_users.setdefault(room.room_name,[]),
+    active_room_users = ActiveUsers.get_room_users(room.room_name)
+    emit2('user_list', {'active_users':active_room_users,
                        'program_text':get_latest_prog(room.room_name)},broadcast=False)
-    # emit('sync',{'program_text':get_latest_prog(room)},room=room,broadcast=False)
-    # print "EMIT:psynch",{'program_text':get_latest_prog(room.room_name)}
+
     join_room(room.room_name)
     if current_user.is_anonymous:
-        active_users[room.room_name].append({'username':username,'id':random.choice(string.ascii_uppercase),"sid":request.sid})
+        ActiveUsers.add_to_room(room_name,{'username':username,'id':random.choice(string.ascii_uppercase),"sid":request.sid,"is_AFK":False})
+
     else:
-        active_users[room.room_name].append(current_user.to_dict())
-    emit('user_joined',{'username':username}, room=room_name)
+        ActiveUsers.add_to_room(room_name,current_user.to_dict())
+    emit2('user_joined',{'username':username}, room=room_name)
 
 
 @socketio.on('run')
+@ActiveUsers.require_authentication
 def on_run(data):
-    emit('user_run', {'username': data['username']}, room=data['room'])
+    emit2('user_run', {'username': data['username']}, room=data['room'])
 
 @socketio.on('speak')
+@ActiveUsers.require_authentication
 def on_speech(data):
     data['message'] = data['message'].replace("\"","&quot;").replace("'","&#39;")
-    print "SAY:",data
     emit('user_speech', data, room=data['room_details']['room'])
 
 @socketio.on('leave')
 def on_leave(data):
-    print "GOODNIGHT?",data
+    print("GOODNIGHT?", data)
     if not data:return
     username = data['username']
     room_name = data['room']
     room = Room.query.filter_by(room_name=room_name).first()
-    print "Leaving Room:",room_name,room
-    if not room:
-        print "NO ROOM ADIOS!!"
-        disconnect()
-        return
-    if room.require_registered:
-        if current_user.is_anonymous:
-            print "NO ANON!!! ADIOS!!"
-            disconnect()
-            return
-    try:
-        idx = [u['username'] for u in active_users[room.room_name]].index(current_user.username)
-    except:
-        if current_user.is_anonymous:
-            try:
-                idx = [u.get('sid',-1) for u in active_users[room.room_name]].index(request.sid)
-            except:
-                idx = -1
-
-        if idx < 0:
-            traceback.print_exc()
-            print "NO IDX!!!"
-            disconnect()
-            return
-    if not current_user.is_anonymous:
-        username = current_user.username
-        try:
-            user = User.query.filter_by(id=current_user.id).first()
-        except:
-            user = None
-        if not user:
-            user = Invitations.get_my_invitation()
-        user.sid=None
-        db.session.commit()
-    ex_user = active_users[room.room_name].pop(idx)
-    print "POPPED:",ex_user,"@",idx
-    leave_room(room_name)
-
     emit('user_left', {'username': username}, room=room_name)
 
 @socketio.on("focus_lost")
@@ -125,10 +181,9 @@ def on_lost_focus(data):
         db.session.commit()
     data['action'] = "LOST"
     # print 'focus_update', data, room.owner.sid
-    emit('focus_update', data, room=room.owner.sid)
+    emit2('focus_update', data, room=room.owner.sid)
 @socketio.on("focus_gained")
 def on_focus_gained(data):
-    print(data)
     room_name = data['room_details']['room']
     room = Room.query.filter_by(room_name=room_name).first()
     data['action']="GAINED"
@@ -138,27 +193,30 @@ def on_focus_gained(data):
             data['user_id'] = user.id
             user.is_AFK = False
             db.session.commit()
-        emit('focus_update', data, room=room.owner.sid)
+        emit2('focus_update', data, room=room.owner.sid)
 
 @socketio.on('message')
 def handle_message(message):
     print('received message.. not sure how or why: ' + message)
 
 @socketio.on("sync_request")
+@ActiveUsers.require_authentication
 def request_sync(user_details):
     room_name = user_details['room_details']['room']
+    if not ActiveUsers.is_authenticated(room_name):
+        disconnect()
     room = Room.query.filter_by(room_name=room_name).first()
     if not room or not room.is_invited(current_user):
         disconnect()
     payload = {'program_text':get_latest_prog(room_name)}
     if hasattr(current_user,'is_admin') and current_user.is_admin:
-        payload['active_users']=active_users[room_name]
-        print "ACTIVE USERS:",payload['active_users']
+        payload['active_users']=ActiveUsers.get_room_users(room_name)
+        print("ACTIVE USERS:", payload['active_users'])
         active_ids = {u['id'] for u in payload['active_users']}
         payload['all_users']=[u.to_dict() for u in room.room_members()]
         for user in payload['all_users']:
             user['online'] = user['id'] in active_ids
-    emit('sync_result',payload)
+    emit2('sync_result',payload)
 
 def handle_change_message(data):
     room = data['room_details']['room']
@@ -205,10 +263,13 @@ def handle_change_message(data):
     update_latest_prog(room,"\n".join(current_text_lines))
 
 @socketio.on('on_editor_change')
+@ActiveUsers.require_authentication
 def handle_editor_change(message):
     socketio = current_app.extensions['socketio']
     room = message['room_details']['room']
-    emit('editor_change_event',message, room=room)
+    if not ActiveUsers.is_authenticated(room):
+        disconnect()
+    emit2('editor_change_event',message, room=room)
     handle_change_message(message)
 
 if __name__ == "__main__":
