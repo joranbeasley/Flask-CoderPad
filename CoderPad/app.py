@@ -10,7 +10,7 @@ from CoderPad.views.views_admin import admin_views
 
 print("STATIC FOLDER:",STATIC_FOLDER)
 print("TEMPLATE FOLDER:",TEMPLATES_FOLDER)
-app = Flask(__name__,static_folder=STATIC_FOLDER,template_folder=TEMPLATES_FOLDER)
+app = Flask(__name__,static_folder=STATIC_FOLDER,static_url_path="/static",template_folder=TEMPLATES_FOLDER)
 app.config['SECRET_KEY'] = 'secret!ShhHHHHH!!!@'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
