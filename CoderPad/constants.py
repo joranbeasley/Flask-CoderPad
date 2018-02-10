@@ -11,7 +11,8 @@ CONFIG_FILE = os.path.join(CONFIG_DIR,".coderpad.ini")
 DEFAULT_DB_PATH  = os.path.join(CONFIG_DIR,".coderpad.db").replace("\\","/")#.replace(":","")
 DEFAULT_DB = "sqlite:///"+DEFAULT_DB_PATH
 
-
+STATIC_FOLDER=os.path.join(os.path.dirname(__file__),'static')
+TEMPLATES_FOLDER=os.path.join(os.path.dirname(__file__),'templates')
 def load_config(fpath=CONFIG_FILE):
     try:
         return OrderedDict([x.strip().replace("\\n","\n") for x in line.decode('latin1').split("=")] for line in open(fpath,'rb') if b"=" in line)
