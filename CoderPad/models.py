@@ -94,11 +94,12 @@ class User(db.Model):
         self.password = self.hash(password)
     @staticmethod
     def hash(password):
-        password=b"sa*%s*lt"%(password)
-        try:
-            return hashlib.md5(password).hexdigest()
-        except TypeError:
-            return hashlib.md5(password.encode("latin1")).hexdigest()
+        password=b"sa*%s*lt"%(password.encode('latin1'))
+        return hashlib.md5(password).hexdigest()
+        # try:
+        #     pass
+        # except TypeError:
+        #     return hashlib.md5(password.encode("latin1")).hexdigest()
 
     @staticmethod
     def login(username, password):
