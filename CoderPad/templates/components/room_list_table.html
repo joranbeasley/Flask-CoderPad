@@ -20,7 +20,7 @@
     function delete_room(room_name,room_id){
         if(confirm("Really Delete Room "+room_name+"?")){
             if(confirm("You should probably disable the room, not delete it... are you sure you want to delete it?")) {
-                $.get("/admin/delete/room/" + room_id.toString())
+                document.location.href = "/admin/delete/room/" + room_id.toString()
             }
         }
     }
