@@ -7,7 +7,7 @@ from flask_login import current_user
 from flask_socketio import join_room, leave_room, SocketIO, disconnect, emit
 
 from ..models import User, Room, db, Invitations
-from room_util import get_latest_prog, update_latest_prog
+from .room_util import get_latest_prog, update_latest_prog
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
