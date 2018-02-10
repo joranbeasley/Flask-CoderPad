@@ -42,9 +42,9 @@ def main():
     print("NOTE that you can change your config settings at %s"%CONFIG_FILE)
     print("NOTE that your can run this with the `--create-admin` flag to create a new admin user")
     if sys.version_info > (3,):
-        socketio.run(app, config['host'], config['port'])
+        socketio.run(app, config['host'], int(config['port']))
     else:
-        socketio.run(app,config['host'].encode('latin1'),config['port'].encode('latin1'))
+        socketio.run(app,config['host'].encode('latin1'),int(config['port'].encode('latin1')))
 
 
 if __name__ == "__main__":
