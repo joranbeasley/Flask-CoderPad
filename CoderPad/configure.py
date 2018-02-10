@@ -87,7 +87,7 @@ def configure_stmp(args,current_config):
 def create_prompt(args,current_config):
     current_prompt = current_config.get('prompt','')
     print("Existing Prompt:")
-    print current_prompt
+    print(current_prompt)
     print("------------\nLeave new prompt blank to use above prompt\n------")
     lines = [py23_input("Enter your prompt (empty line when done):"),]
     if lines[0]:
